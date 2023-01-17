@@ -338,11 +338,11 @@ class ProceduralGenerator():
             self.rooms.append(SpawnRoom(roomMin, roomMax, self.size, self))
         generatingcorridors = True
         corridorchance = 100
-        while generatingcorridors:
-            if random.randrange(1,100) <= corridorchance:
-                spawnCorridors(branching ,corridormaxlen, splittingchance, DeadEnds, self.rooms, self)
-                corridorchance -= corridordecay
-            else:
-                generatingcorridors = False
+        # while generatingcorridors:
+        #     if random.randrange(1,100) <= corridorchance:
+        #         spawnCorridors(branching ,corridormaxlen, splittingchance, DeadEnds, self.rooms, self)
+        #         corridorchance -= corridordecay
+        #     else:
+        #         generatingcorridors = False
 
 
