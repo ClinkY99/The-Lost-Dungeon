@@ -309,12 +309,12 @@ def GenerateCorridors(Branching, corridorMaxLen, MaxCorridorsPerRoom, SplittingC
     RemainingRooms = AllRooms
     StartRoom = RemainingRooms[random.randrange(0, len(RemainingRooms)-1)]
     RoomsToBeProscessed.append(StartRoom)
-    RemainingRooms.remove(StartRoom)
     Generating = True
     while Generating:
         for i in RoomsToBeProscessed:
             #sets possibleRooms to be sorted remaining rooms, Possible rooms is just a reusable variable
             PossibleRooms = sorted(RemainingRooms, key=itemgetter(1))
+            PossibleRooms.remove(i)
             for x in range(1, random.randrange(1, MaxCorridorsPerRoom)):
                 Corridor = SpawnCorridor(i, PossibleRooms)
                 RoomsToBeProscessed.append(Corridor[0])
@@ -322,19 +322,63 @@ def GenerateCorridors(Branching, corridorMaxLen, MaxCorridorsPerRoom, SplittingC
 
 
 
-def SpawnCorridor(StartRoom, RemainingRooms):
+def SpawnCorridor(StartRoom, RemainingRooms, corridorMaxLen, generator):
     closerooms = []
-    Endroom = None
+    tiles = []
     #gets top left location of all rooms
     RoomsLeftForPicking = list(map(itemgetter(1), RemainingRooms))
     PickingClosest = True
     for i in range(0,5):
         #picks closest to startroom
-        closest = min(RoomsLeftForPicking, key=lambda x: Functions.DistanceCoordinates(x,StartRoom[1]))
+        closest = RemainingRooms[RemainingRooms.index(min(RoomsLeftForPicking, key=lambda x: Functions.DistanceCoordinates(x,StartRoom[1])))]
         RoomsLeftForPicking.remove(closest)
         closerooms.append(closest)
+    Endroom = closerooms[random.randrange(0,4)]
+    EndroomLoc = Endroom[2][random.randrange(0, len(Endroom[2]))]
+    direction = Functions.Direction(StartRoom[1], EndroomLoc)
+    startingpoints = []
+    for x in StartRoom[2]:
+        if direction == 0:
+            if x[1] == StartRoom[1][1]:
+                startingpoints.append(x)
+        elif direction == 3:
+            if x[0] == StartRoom[1][0]:
+                startingpoints.append(x)
 
-        
+        elif direction == 2:
+            if x[1] == StartRoom[1][1]+StartRoom[0][1]-1:
+                startingpoints.append(x)
+        else:
+            if x[0] == StartRoom[1][0]+StartRoom[0][0]-1:
+                startingpoints.append(x)
+    startingpoint = startingpoints[random.randrange(0, len(startingpoints)-1)]
+    generationPath = True
+    while generationPath:
+        for i in range(1, random.randrange(2, corridorMaxLen)):
+            Newpoint = None
+            if direction == 0:
+                 Newpoint =( startingpoint[0] , startingpoint[1]-i)
+            elif direction == 1:
+                 Newpoint = (startingpoint[0]+i, startingpoint[1])
+            elif direction == 2:
+                Newpoint = (startingpoint[0], startingpoint[1]+i)
+            else:
+                Newpoint = (startingpoint[0]-i,startingpoint[1] )
+            try:
+                generator.map[Newpoint[0]][Newpoint[1]] = True
+                tiles.append(Newpoint)
+            except Exception:
+                pass
+            if Newpoint[0] == EndroomLoc[0] or Newpoint[1] == EndroomLoc[1]:
+                break
+    for i in tiles:
+        if i in Endroom[2]:
+            generationPath = False
+            break
+    startingpoint = tiles[len(tiles) - 1]
+    direction = Functions.Direction(startingpoint,EndroomLoc)
+
+
 
 class ProceduralGenerator():
     #init function, sets up all variables
