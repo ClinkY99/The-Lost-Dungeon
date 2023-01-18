@@ -1,6 +1,7 @@
 import random
 import pygame
-
+import Functions
+from operator import itemgetter
 
 def SpawnRoom(roomMin, roomMax, size, generator):
     #generates extents of rooms
@@ -8,7 +9,6 @@ def SpawnRoom(roomMin, roomMax, size, generator):
     #picks location on grid
     locationtopleft = (random.randrange(0, size[0]-roomsize[0]), random.randrange(0, size[1]-roomsize[1]))
     tiles = []
-    tilesrelative = []
     #loops through all room tiles and adds to grid
     for x in range(locationtopleft[0], locationtopleft[0] + roomsize[0]):
         for y in range(locationtopleft[1], locationtopleft[1] + roomsize[1]):
@@ -301,7 +301,40 @@ def SpawnRoom(roomMin, roomMax, size, generator):
 #
 #
 
+def GenerateCorridors(Branching, corridorMaxLen, MaxCorridorsPerRoom, SplittingChance, DeadEnds, Generator):
+    ConnectedRooms = []
+    RoomsToBeProscessed = []
+    RoomsToBeProscessedNext = []
+    AllRooms = Generator.rooms
+    RemainingRooms = AllRooms
+    StartRoom = RemainingRooms[random.randrange(0, len(RemainingRooms)-1)]
+    RoomsToBeProscessed.append(StartRoom)
+    RemainingRooms.remove(StartRoom)
+    Generating = True
+    while Generating:
+        for i in RoomsToBeProscessed:
+            #sets possibleRooms to be sorted remaining rooms, Possible rooms is just a reusable variable
+            PossibleRooms = sorted(RemainingRooms, key=itemgetter(1))
+            for x in range(1, random.randrange(1, MaxCorridorsPerRoom)):
+                Corridor = SpawnCorridor(i, PossibleRooms)
+                RoomsToBeProscessed.append(Corridor[0])
+                PossibleRooms = Corridor[1]
 
+
+
+def SpawnCorridor(StartRoom, RemainingRooms):
+    closerooms = []
+    Endroom = None
+    #gets top left location of all rooms
+    RoomsLeftForPicking = list(map(itemgetter(1), RemainingRooms))
+    PickingClosest = True
+    for i in range(0,5):
+        #picks closest to startroom
+        closest = min(RoomsLeftForPicking, key=lambda x: Functions.DistanceCoordinates(x,StartRoom[1]))
+        RoomsLeftForPicking.remove(closest)
+        closerooms.append(closest)
+
+        
 
 class ProceduralGenerator():
     #init function, sets up all variables

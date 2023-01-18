@@ -1,5 +1,6 @@
 import pygame
 from Procedural_Generator import ProceduralGenerator
+from operator import itemgetter
 
 pygame.init()
 
@@ -9,7 +10,7 @@ ScreenWidth = 720
 generator = ProceduralGenerator(int(ScreenLength/10), int(ScreenWidth/10), 50)
 
 generator.Generate(50, 2, 10, True, 1, 25, 5, None, None)
-
+print(list(map(itemgetter(1), generator.rooms)))
 # Set up the drawing window
 screen = pygame.display.set_mode([ScreenLength, ScreenWidth])
 
