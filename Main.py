@@ -4,13 +4,14 @@ from operator import itemgetter
 
 pygame.init()
 
-ScreenLength = 1800
-ScreenWidth = 720
+ScreenLength = 1900
+ScreenWidth = 1000
 
-generator = ProceduralGenerator(int(ScreenLength/10), int(ScreenWidth/10), 50)
+generator = ProceduralGenerator(int(ScreenLength/10), int(ScreenWidth/10), None )
 
-generator.Generate(50, 2, 10, True, 1, 25, 5, None, None)
-print(list(map(itemgetter(1), generator.rooms)))
+generator.Generate(50, 2, 10, True, 50, 10, 1, None, None)
+print('test')
+
 # Set up the drawing window
 screen = pygame.display.set_mode([ScreenLength, ScreenWidth])
 
