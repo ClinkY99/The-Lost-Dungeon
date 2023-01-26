@@ -1,22 +1,53 @@
 import pygame
 from Procedural_Generator import ProceduralGenerator
-from operator import itemgetter
 
 pygame.init()
 
-ScreenLength = 1900
-ScreenWidth = 1000
+ScreenLength = 1870
+ScreenWidth = 1030
 
-generator = ProceduralGenerator(int(ScreenLength/10), int(ScreenWidth/10), None )
+generator = ProceduralGenerator(int(ScreenLength/10), int(ScreenWidth/10), None)
 
-generator.Generate(50, 2, 10, True, 50, 10, 1, None, None)
-print('test')
+generator.Generate(7, 20, 30, True, 50, 10, 2, None, None)
+
 
 # Set up the drawing window
 screen = pygame.display.set_mode([ScreenLength, ScreenWidth])
+map = pygame.Surface((ScreenLength,ScreenWidth))
+pygame.display.set_caption('Darkest Dungeon')
 
+screen.fill((0, 0, 0))
 
+# Draw a solid blue circle in the center
+tile = pygame.Surface((10, 10))
+wall = pygame.Surface((5, 10))
+corner = pygame.Surface((5,5))
+corner.fill((127,127,127))
+wall.fill((127,127,127))
+tile.fill((255,255,255))
+for x in range(len(generator.map)):
+    for y in range(len(generator.map[x])):
+        if generator.map[x][y].Active:
+            map.blit(tile, (x*10, y*10))
+        if generator.map[x][y].wall[1]:
+            map.blit(wall, ((x*10)+10, y*10))
+        if generator.map[x][y].wall[3]:
+            map.blit(wall, ((x*10)-5, y*10))
+        rotatedwall = pygame.transform.rotate(wall, 270)
+        if generator.map[x][y].wall[0]:
+            map.blit(rotatedwall, (x*10, (y*10)-5))
+        if generator.map[x][y].wall[2]:
+            map.blit(rotatedwall, (x*10, (y*10)+10))
+        if generator.map[x][y].corner[0]:
+            map.blit(corner, ((x*10)-5,(y*10)-5))
+        if generator.map[x][y].corner[1]:
+            map.blit(corner, ((x*10)+10,(y*10)-5))
+        if generator.map[x][y].corner[2]:
+            map.blit(corner, ((x*10)+10, (y*10)+10))
+        if generator.map[x][y].corner[3]:
+            map.blit(corner, ((x*10)-5, (y*10)+10))
 
+screen.blit(map, (0,0))
 # Run until the user asks to quit
 running = True
 while running:
@@ -27,16 +58,9 @@ while running:
             running = False
 
     # Fill the background with white
-    screen.fill((0, 0, 0))
 
-    # Draw a solid blue circle in the center
-    tile = pygame.Surface((10, 10))
-    tile.fill((255,255,255))
 
-    for x in range(len(generator.map)):
-        for y in range(len(generator.map[x])):
-            if generator.map[x][y]:
-                screen.blit(tile, (x*10, y*10))
+
 
 
     # Flip the display
