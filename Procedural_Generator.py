@@ -3,6 +3,7 @@ import pygame
 import Functions
 from operator import itemgetter
 from Classes import Tile, EnemySpawn
+import Classes
 import math
 
 # def SpawnRoom(roomMin, roomMax, size, generator):
@@ -245,10 +246,21 @@ def enemySpawns(diffuculty, generator):
         except:
             enemys.append(EnemySpawn(1, tile))
     return enemys
+def SpawnObjectives(generator, numObjectives, diffuculty):
+    Objectives = []
+    for i in range(0, numObjectives):
+        Objectives.append(Classes.Objective(poispawnloc(generator, 3), math.ceil(diffuculty/2)))
+        print(Objectives[0].POI.Location)
+    return Objectives
 
-def poispawnwithenemys(generator,type):
-    rooms = generator.rooms[random.randrange(0, len(generator.rooms))]
+
+
+def poispawnloc(generator, size):
+    rooms = list(generator.rooms)
     rooms.remove(generator.startRoom)
+    rooms = list(generator.rooms[random.randrange(0, len(generator.rooms))])
+    location = (random.randrange(rooms[1][0], rooms[1][0]+rooms[0][0]-size), random.randrange(rooms[1][1], rooms[1][1]+rooms[0][1]-size))
+    return location
 
 
 
@@ -272,8 +284,11 @@ class ProceduralGenerator():
         self.startloc = None
         self.startRoom= None
         self.enemys = []
-        self.POIs = []
+        self.Treasure = []
+        self.Jar = []
+        self.Objectives = []
         self.diffucultyincrese = 2
+        self.Objectivesnum = 2
         #creates grid
         for x in range(length):
             new_row = []
@@ -288,7 +303,7 @@ class ProceduralGenerator():
             random.seed(seed)
 
     #generate function
-    def Generate(self, numrooms, roomMin, roomMax, maxdistance, branching, corridormaxlen, splittingchance, MaxCorridorsPerRoom, DeadEnds, Diffuculty):
+    def Generate(self, numrooms, roomMin, roomMax, maxdistance, branching, corridormaxlen, splittingchance, MaxCorridorsPerRoom, DeadEnds, Diffuculty, ObjectivesNum):
         print('Generating Rooms')
         for i in range(numrooms):
             self.rooms.append(SpawnRoom(roomMin, roomMax, maxdistance + 30, self.size, self))
@@ -302,7 +317,8 @@ class ProceduralGenerator():
         self.startRoom = self.startloc[1]
         print('spawning enemys')
         self.enemys.append(enemySpawns(Diffuculty, self))
-        print('creation POIs')
+        print('creating POIs')
+        self.Objectives = (SpawnObjectives(self,ObjectivesNum,Diffuculty))
 
 
 

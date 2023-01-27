@@ -6,9 +6,9 @@ pygame.init()
 ScreenLength = 1870
 ScreenWidth = 1030
 
-generator = ProceduralGenerator(int(ScreenLength/10), int(ScreenWidth/10), 50)
+generator = ProceduralGenerator(int(ScreenLength/10), int(ScreenWidth/10), None)
 
-generator.Generate(7, 10, 20,20, True, 50, 10, 2, None, 1)
+generator.Generate(7, 10, 20,20, True, 50, 10, 2, None, 1,2)
 
 
 # Set up the drawing window
@@ -23,6 +23,8 @@ tile = pygame.Surface((10, 10))
 wall = pygame.Surface((5, 10))
 corner = pygame.Surface((5,5))
 start = pygame.Surface((20,20))
+Objective = pygame.Surface((30,30))
+Objective.fill((0,255,0))
 enemytile = pygame.Surface((10,10))
 enemytile.fill((210,150,75))
 start.fill((0,0,100))
@@ -53,6 +55,10 @@ for x in range(len(generator.map)):
             map.blit(corner, ((x*10)+10, (y*10)+10))
         if generator.map[x][y].corner[3]:
             map.blit(corner, ((x*10)-5, (y*10)+10))
+
+for i in generator.Objectives:
+    print(i)
+    map.blit(Objective, i.POI.Location)
 map.blit(start, generator.startloc[0])
 screen.blit(map, (0,0))
 # Run until the user asks to quit
