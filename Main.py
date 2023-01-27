@@ -8,7 +8,7 @@ ScreenWidth = 1030
 
 generator = ProceduralGenerator(int(ScreenLength/10), int(ScreenWidth/10), 50)
 
-generator.Generate(20, 10, 25,50, True, 50, 10, 2, None, 2)
+generator.Generate(7, 10, 20,20, True, 50, 10, 2, None, 1)
 
 
 # Set up the drawing window

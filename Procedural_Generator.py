@@ -234,7 +234,7 @@ def enemySpawns(diffuculty, generator):
     locationstospawnenemys = list(generator.rooms)
     locationstospawnenemys.remove(generator.startRoom)
     enemys = []
-    for i in range(0, random.randrange(diffuculty*generator.diffucultyincrese, diffuculty*generator.diffucultyincrese*5)):
+    for i in range(0, random.randrange(diffuculty*generator.diffucultyincrese*2, diffuculty*generator.diffucultyincrese*5)):
         if len(locationstospawnenemys) == 0:
             break
         room = list(locationstospawnenemys[random.randrange(0, len(locationstospawnenemys))])
@@ -245,6 +245,12 @@ def enemySpawns(diffuculty, generator):
         except:
             enemys.append(EnemySpawn(1, tile))
     return enemys
+
+def poispawnwithenemys(generator,type):
+    rooms = generator.rooms[random.randrange(0, len(generator.rooms))]
+    rooms.remove(generator.startRoom)
+
+
 
 class ProceduralGenerator():
     #init function, sets up all variables
@@ -266,6 +272,7 @@ class ProceduralGenerator():
         self.startloc = None
         self.startRoom= None
         self.enemys = []
+        self.POIs = []
         self.diffucultyincrese = 2
         #creates grid
         for x in range(length):
@@ -295,5 +302,7 @@ class ProceduralGenerator():
         self.startRoom = self.startloc[1]
         print('spawning enemys')
         self.enemys.append(enemySpawns(Diffuculty, self))
+        print('creation POIs')
+
 
 
