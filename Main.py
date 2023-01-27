@@ -3,6 +3,7 @@ from pygame import mixer
 import math
 from Procedural_Generator import ProceduralGenerator
 from Classes import Player
+import Classes
 
 
 class game(object):

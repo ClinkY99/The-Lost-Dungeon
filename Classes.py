@@ -1,6 +1,54 @@
 import pygame
 import Functions
-#class Enemy(pygame.sprite.Sprite):
+from pathfinding.core.grid import Grid
+from pathfinding.finder.a_star import AStarFinder
+
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self,health, speed, attackdamage, location):
+        super(Enemy, self).__init__()
+        self.speed=speed
+        self.health=health
+        self.attackdamage=attackdamage
+        self.enemylocation = location
+        self.image = pygame.Surface((3, 3))
+        self.image.fill((255,0,0))
+        self.rect = self.image.get_rect()
+        self.rect.x = location[0]
+        self.rect.y = location[1]
+        self.Bigimage = pygame.Surface((15,15))
+        self.Bigimage.fill((255,0,0))
+        self.bigrect = self.Bigimage.get_rect()
+        self.bigrect.x = location[0] * 5
+        self.bigrect.y = location[1] *5
+
+    def pathfinding(self, playerlocation):
+        matrix = [
+            [1, 1, 1, 1, 1, 1],
+            [1, 0, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1]]
+
+        # 1. create the grid with the nodes
+        field = Grid(matrix=matrix)
+
+        # 2. get start and end point
+
+        start = field.node(3, 3)
+        end = field.node(7, 3)
+
+        # 3. create a finder with the movement style
+        finder = AStarFinder()
+
+        # 4. returns a list with the path and the amount of times the finder had to run to get the path
+        path, runs = finder.find_path(start, end, grid)
+
+        # 5. print result
+        print(path)
+class basicenemy(Enemy):
+    def __init__(self, location):
+        super(basicenemy, self).__init__(1,1,1, location)
+        self.weapon=1
+        self.armour=1
+
 
 
 class Tile():
@@ -11,8 +59,14 @@ class Tile():
         self.enemys = False
 class EnemySpawn():
     def __init__(self, NumberEnemys, Location):
-        self.NumberEnemys= None
-        self.Location = None
+        self.NumberEnemys= NumberEnemys
+        self.Location = Location
+
+    def Spawn(self):
+        enemysspawned = pygame.sprite.Group()
+        for i in range(self.NumberEnemys):
+            enemysspawned.add(basicenemy(self.Location))
+        return enemysspawned
 class StartLoc():
     def __init__(self, Location):
         self.Location = Location
@@ -151,3 +205,10 @@ class Player(pygame.sprite.Sprite):
                 camera_X -= speed
                 playerLocation[0] += speed/5
         return [camera_X,camera_Y]
+
+class enemymap():
+    def __init__(self):
+
+        enemies.draw(enemyoverlay)
+        enemyoverlay.set_colorkey((0, 0, 0))
+        enemiesoverlayBIG = pygame.transform.scale(enemyoverlay, newsize)
