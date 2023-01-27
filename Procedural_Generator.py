@@ -2,7 +2,8 @@ import random
 import pygame
 import Functions
 from operator import itemgetter
-from Classes import Tile
+from Classes import Tile, EnemySpawn
+import math
 
 # def SpawnRoom(roomMin, roomMax, size, generator):
 #     #generates extents of rooms
@@ -225,7 +226,25 @@ def SpawnWalls(generator):
                 if walls[3] and walls[0]:
                     generator.map[coord[0]][coord[1]].corner[0] = True
 
-
+def choosestart(generator, size):
+    roomin = generator.rooms[random.randrange(0, len(generator.rooms))]
+    location = (random.randrange(roomin[1][0], roomin[1][0]+roomin[0][0]-2)*10, random.randrange(roomin[1][1], roomin[1][1]+roomin[0][1]-2)*10)
+    return location, roomin
+def enemySpawns(diffuculty, generator):
+    locationstospawnenemys = list(generator.rooms)
+    locationstospawnenemys.remove(generator.startRoom)
+    enemys = []
+    for i in range(0, random.randrange(diffuculty*generator.diffucultyincrese, diffuculty*generator.diffucultyincrese*5)):
+        if len(locationstospawnenemys) == 0:
+            break
+        room = list(locationstospawnenemys[random.randrange(0, len(locationstospawnenemys))])
+        tile = room[2][random.randrange(0, len(room[2]))]
+        generator.map[tile[0]][tile[1]].enemys = True
+        try:
+            enemys.append(EnemySpawn(random.randrange(1,math.ceil(diffuculty/4)), tile))
+        except:
+            enemys.append(EnemySpawn(1, tile))
+    return enemys
 
 class ProceduralGenerator():
     #init function, sets up all variables
@@ -244,6 +263,10 @@ class ProceduralGenerator():
         self.Diffuculty = None
         self.map = []
         self.tiles = []
+        self.startloc = None
+        self.startRoom= None
+        self.enemys = []
+        self.diffucultyincrese = 2
         #creates grid
         for x in range(length):
             new_row = []
@@ -267,5 +290,10 @@ class ProceduralGenerator():
         GenerateCorridors(branching, corridormaxlen, MaxCorridorsPerRoom, splittingchance, DeadEnds, self)
         print('Generating Walls')
         SpawnWalls(self)
+        print('Picking Start')
+        self.startloc = choosestart(self, self.size)
+        self.startRoom = self.startloc[1]
+        print('spawning enemys')
+        self.enemys.append(enemySpawns(Diffuculty, self))
 
 
