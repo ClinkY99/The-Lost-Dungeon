@@ -4,19 +4,49 @@ import Functions
 from operator import itemgetter
 from Classes import Tile
 
-def SpawnRoom(roomMin, roomMax, size, generator):
-    #generates extents of rooms
+# def SpawnRoom(roomMin, roomMax, size, generator):
+#     #generates extents of rooms
+#     roomsize = (random.randrange(roomMin,roomMax), random.randrange(roomMin,roomMax))
+#     #picks location on grid
+#     locationtopleft = (random.randrange(0, size[0]-roomsize[0]), random.randrange(0, size[1]-roomsize[1]))
+#     tiles = []
+#     #loops through all room tiles and adds to grid
+#     for x in range(locationtopleft[0], locationtopleft[0] + roomsize[0]):
+#         for y in range(locationtopleft[1], locationtopleft[1] + roomsize[1]):
+#             generator.map[x][y].Active = True
+#             tiles.append((x,y))
+#     room = [roomsize, locationtopleft, tiles, False, 0]
+#     return room
+
+def SpawnRoom(roomMin, roomMax, distancebetween, size, generator):
     roomsize = (random.randrange(roomMin,roomMax), random.randrange(roomMin,roomMax))
-    #picks location on grid
-    locationtopleft = (random.randrange(0, size[0]-roomsize[0]), random.randrange(0, size[1]-roomsize[1]))
+    searching = True
+    while searching:
+        #force first room to be in center of map, generate off that. pick random room start room each time, if overlapps or goes off screen reloop
+        if len(generator.rooms) == 0:
+            locationtopleft = (int((size[0]-roomsize[0])/2), int((size[1]-roomsize[1])/2))
+            searching = False
+        else:
+            try:
+                generateoff = generator.rooms[random.randrange(0, len(generator.rooms)-1)]
+            except:
+                generateoff = generator.rooms[0]
+            locationtopleft = (random.randrange(generateoff[1][0]-distancebetween-roomsize[0], generateoff[1][0] + distancebetween +generateoff[0][0] + roomsize[0]), random.randrange(generateoff[1][1]-distancebetween-roomsize[1], generateoff[1][1] + generateoff[0][1]+roomsize[1]+distancebetween))
+            if locationtopleft[0] <0 or locationtopleft[0] >size[0] -roomsize[0] or locationtopleft[1] < 0 or locationtopleft[1] > size[1] - roomsize[1]:
+                searching = True
+            elif locationtopleft in generateoff[2]:
+                searching = True
+            else:
+                searching = False
     tiles = []
-    #loops through all room tiles and adds to grid
     for x in range(locationtopleft[0], locationtopleft[0] + roomsize[0]):
         for y in range(locationtopleft[1], locationtopleft[1] + roomsize[1]):
             generator.map[x][y].Active = True
             tiles.append((x,y))
     room = [roomsize, locationtopleft, tiles, False, 0]
     return room
+
+
 
 def GenerateCorridors(Branching, corridorMaxLen, MaxCorridorsPerRoom, SplittingChance, DeadEnds, Generator):
     #Sets Up Variables for Generating corridors
@@ -146,14 +176,17 @@ def SpawnCorridor(StartRoom, RemainingRooms, corridorMaxLen, generator):
                 Newpoint = (startingpoint[0], startingpoint[1]+i)
             else:
                 Newpoint = (startingpoint[0]-i,startingpoint[1] )
+
             try:
                 #sets tile to be active
+
                 generator.map[Newpoint[0]][Newpoint[1]].Active = True
                 tiles.append(Newpoint)
+                if Newpoint[0] == EndroomLoc[0] or Newpoint[1] == EndroomLoc[1]:
+                    break
             except Exception:
                 break
-            if Newpoint[0] == EndroomLoc[0] or Newpoint[1] == EndroomLoc[1]:
-                break
+
 
         #checks if cooridor overlaps with corridors
         for i in tiles:
@@ -198,7 +231,7 @@ class ProceduralGenerator():
     #init function, sets up all variables
     def __init__(self,length, width,seed):
         super(ProceduralGenerator, self).__init__()
-        self.size = (length, width)
+        self.size = (length-1, width-1)
         self.numrooms = None
         self.roomMax = None
         self.roomMin = None
@@ -210,6 +243,7 @@ class ProceduralGenerator():
         self.Corridors = []
         self.Diffuculty = None
         self.map = []
+        self.tiles = []
         #creates grid
         for x in range(length):
             new_row = []
@@ -224,10 +258,11 @@ class ProceduralGenerator():
             random.seed(seed)
 
     #generate function
-    def Generate(self, numrooms, roomMin, roomMax, branching, corridormaxlen, splittingchance, MaxCorridorsPerRoom, DeadEnds, Diffuculty):
+    def Generate(self, numrooms, roomMin, roomMax, maxdistance, branching, corridormaxlen, splittingchance, MaxCorridorsPerRoom, DeadEnds, Diffuculty):
         print('Generating Rooms')
         for i in range(numrooms):
-            self.rooms.append(SpawnRoom(roomMin, roomMax, self.size, self))
+            self.rooms.append(SpawnRoom(roomMin, roomMax, maxdistance + 30, self.size, self))
+            self.tiles.append(self.rooms[len(self.rooms)-1][2])
         print('Generating Corridors')
         GenerateCorridors(branching, corridormaxlen, MaxCorridorsPerRoom, splittingchance, DeadEnds, self)
         print('Generating Walls')

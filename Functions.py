@@ -24,8 +24,8 @@ def Direction(startroomloc, endroomloc):
     except Exception:
         pass
     try:
-        #gets random direction from the 2 returned
-        directions = directions[random.randrange(0, 1)]
+        #gets random direction from the 2 returne
+        directions = directions[random.randrange(0, 2)]
     except:
         #if only 1 is returned return that 1
         directions = directions[0]

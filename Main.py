@@ -8,13 +8,13 @@ ScreenWidth = 1030
 
 generator = ProceduralGenerator(int(ScreenLength/10), int(ScreenWidth/10), None)
 
-generator.Generate(7, 20, 30, True, 50, 10, 2, None, None)
+generator.Generate(20, 10, 25,50, True, 50, 10, 2, None, None)
 
 
 # Set up the drawing window
 screen = pygame.display.set_mode([ScreenLength, ScreenWidth])
 map = pygame.Surface((ScreenLength,ScreenWidth))
-pygame.display.set_caption('Darkest Dungeon')
+pygame.display.set_caption('The Lost Dungeon')
 
 screen.fill((0, 0, 0))
 
