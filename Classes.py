@@ -26,20 +26,21 @@ class POI():
         else:
             self.NumEnemys = -1
 
-class Objective():
+class Objective(POI):
     def __init__(self, location, NumEnemys):
-        self.POI = POI(location, True, NumEnemys)
+        super(Objective, self).__init__(location,NumEnemys= NumEnemys, EnemySpawn= True)
     def Complete(self):
         pass
-class Treasure():
-    def __init__(self,location, NumEnemys, contains):
-        self.POI = POI(location, True, NumEnemys)
+class Treasure(POI):
+    def __init__(self, location, direction, NumEnemys, contains):
+        super(Treasure, self).__init__(location, NumEnemys=NumEnemys, EnemySpawn= True)
         self.contains = contains
+        self.direction = direction
     def open(self):
         pass
-class Jar():
-    def __init__(self,location, NumEnemys):
-        self.POI = POI(location, True, NumEnemys)
+class Jar(POI):
+    def __init__(self,location):
+        super(Jar, self).__init__(location)
     def open(self):
         pass
 

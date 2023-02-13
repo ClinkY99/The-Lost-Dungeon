@@ -77,4 +77,7 @@ def WallCheck(generator, coord):
             walls[3] = True
     except:
         walls[3] = True
+    for i in walls:
+        if i:
+            generator.edgerooms.append(coord)
     return walls

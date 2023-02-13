@@ -5,21 +5,6 @@ from operator import itemgetter
 from Classes import Tile, EnemySpawn
 import Classes
 import math
-
-# def SpawnRoom(roomMin, roomMax, size, generator):
-#     #generates extents of rooms
-#     roomsize = (random.randrange(roomMin,roomMax), random.randrange(roomMin,roomMax))
-#     #picks location on grid
-#     locationtopleft = (random.randrange(0, size[0]-roomsize[0]), random.randrange(0, size[1]-roomsize[1]))
-#     tiles = []
-#     #loops through all room tiles and adds to grid
-#     for x in range(locationtopleft[0], locationtopleft[0] + roomsize[0]):
-#         for y in range(locationtopleft[1], locationtopleft[1] + roomsize[1]):
-#             generator.map[x][y].Active = True
-#             tiles.append((x,y))
-#     room = [roomsize, locationtopleft, tiles, False, 0]
-#     return room
-
 def SpawnRoom(roomMin, roomMax, distancebetween, size, generator):
     roomsize = (random.randrange(roomMin,roomMax), random.randrange(roomMin,roomMax))
     searching = True
@@ -33,7 +18,16 @@ def SpawnRoom(roomMin, roomMax, distancebetween, size, generator):
                 generateoff = generator.rooms[random.randrange(0, len(generator.rooms)-1)]
             except:
                 generateoff = generator.rooms[0]
-            locationtopleft = (random.randrange(generateoff[1][0]-distancebetween-roomsize[0], generateoff[1][0] + distancebetween +generateoff[0][0] + roomsize[0]), random.randrange(generateoff[1][1]-distancebetween-roomsize[1], generateoff[1][1] + generateoff[0][1]+roomsize[1]+distancebetween))
+            Xloc = {
+                0:random.randrange(generateoff[1][0]-distancebetween-roomsize[0], generateoff[1][0]+2-roomsize[0]),
+                1:random.randrange(generateoff[1][0]+generateoff[0][0] -2 ,generateoff[1][0] + distancebetween +generateoff[0][0])
+            }
+            YLoc = {
+                0:random.randrange(generateoff[1][1]-distancebetween-roomsize[1], generateoff[1][1]+2-roomsize[1]),
+                1:random.randrange(generateoff[1][1] + generateoff[0][1] - 2 ,generateoff[1][1] + generateoff[0][1]+roomsize[1]+distancebetween)
+            }
+
+            locationtopleft = (Xloc[random.randrange(0,2)], YLoc[random.randrange(0,2)])
             if locationtopleft[0] <0 or locationtopleft[0] >size[0] -roomsize[0] or locationtopleft[1] < 0 or locationtopleft[1] > size[1] - roomsize[1]:
                 searching = True
             elif locationtopleft in generateoff[2]:
@@ -165,6 +159,7 @@ def SpawnCorridor(StartRoom, RemainingRooms, corridorMaxLen, generator):
     startingpoint = startingpoints[random.randrange(0, len(startingpoints)-1)]
     #start generating
     generationPath = True
+    inline = [False,False]
     while generationPath:
         #loops through a random range for corridor length
         for i in range(1, random.randrange(2, corridorMaxLen)):
@@ -181,18 +176,25 @@ def SpawnCorridor(StartRoom, RemainingRooms, corridorMaxLen, generator):
 
             try:
                 #sets tile to be active
-
                 generator.map[Newpoint[0]][Newpoint[1]].Active = True
                 tiles.append(Newpoint)
-                if Newpoint[0] == EndroomLoc[0] or Newpoint[1] == EndroomLoc[1]:
+                if not inline[0] and Newpoint[0] == EndroomLoc[0]:
+                    inline[0] = True
+                    print('break')
+                    break
+                if not inline[1] and Newpoint[1] == EndroomLoc[1]:
+                    print('break')
+                    inline[1] = True
                     break
             except Exception:
                 break
 
 
+        print('test')
         #checks if cooridor overlaps with corridors
         for i in tiles:
             if i in Endroom[2]:
+                print('found')
                 generationPath = False
                 break
         #gets new starting point
@@ -248,25 +250,35 @@ def enemySpawns(diffuculty, generator):
     return enemys
 def SpawnObjectives(generator, numObjectives, diffuculty):
     Objectives = []
+    rooms = list(generator.rooms)
+    rooms.remove(generator.startRoom)
     for i in range(0, numObjectives):
-        Objectives.append(Classes.Objective(poispawnloc(generator, 3), math.ceil(diffuculty/2)))
-        print(Objectives[0].POI.Location)
+        Objectives.append(Classes.Objective(poispawnloc(generator, (3,3), rooms), math.ceil(diffuculty/2)))
     return Objectives
 
 
 
-def poispawnloc(generator, size):
-    rooms = list(generator.rooms)
-    rooms.remove(generator.startRoom)
-    rooms = list(generator.rooms[random.randrange(0, len(generator.rooms))])
-    location = (random.randrange(rooms[1][0], rooms[1][0]+rooms[0][0]-size), random.randrange(rooms[1][1], rooms[1][1]+rooms[0][1]-size))
+def poispawnloc(generator, size, rooms):
+    room = list(rooms[random.randrange(0, len(rooms))])
+    location = (random.randrange(room[1][0], room[1][0]+room[0][0]-size[0]), random.randrange(room[1][1], room[1][1]+room[0][1]-size[1]))
+    rooms.remove(room)
     return location
-
-
+def spawnchest(generator, loot, diffuculty):
+    chests = []
+    rooms = list(generator.rooms)
+    for i in range(0, random.randrange(1,loot)):
+        chests.append((Classes.Treasure(poispawnloc(generator,(6,6),rooms), random.randrange(0,8), math.ceil(diffuculty/4), 4)))
+    return chests
+def spawnJars(generator, maxjarchance):
+    jars = []
+    for i in range(random.randrange(1,maxjarchance)):
+        location = generator.edgerooms[random.randrange(0,len(generator.edgerooms))]
+        jars.append(Classes.Jar(location))
+    return jars
 
 class ProceduralGenerator():
     #init function, sets up all variables
-    def __init__(self,length, width,seed):
+    def __init__(self,length, width,seed = None):
         super(ProceduralGenerator, self).__init__()
         self.size = (length-1, width-1)
         self.numrooms = None
@@ -289,6 +301,9 @@ class ProceduralGenerator():
         self.Objectives = []
         self.diffucultyincrese = 2
         self.Objectivesnum = 2
+        self.loot = 0
+        self.edgerooms = []
+        self.jars = []
         #creates grid
         for x in range(length):
             new_row = []
@@ -303,10 +318,10 @@ class ProceduralGenerator():
             random.seed(seed)
 
     #generate function
-    def Generate(self, numrooms, roomMin, roomMax, maxdistance, branching, corridormaxlen, splittingchance, MaxCorridorsPerRoom, DeadEnds, Diffuculty, ObjectivesNum):
+    def Generate(self, numrooms, roomMin, roomMax, maxdistance, branching, corridormaxlen, splittingchance, MaxCorridorsPerRoom, DeadEnds, Diffuculty, ObjectivesNum, loot, maxjars):
         print('Generating Rooms')
         for i in range(numrooms):
-            self.rooms.append(SpawnRoom(roomMin, roomMax, maxdistance + 30, self.size, self))
+            self.rooms.append(SpawnRoom(roomMin, roomMax, maxdistance, self.size, self))
             self.tiles.append(self.rooms[len(self.rooms)-1][2])
         print('Generating Corridors')
         GenerateCorridors(branching, corridormaxlen, MaxCorridorsPerRoom, splittingchance, DeadEnds, self)
@@ -319,6 +334,60 @@ class ProceduralGenerator():
         self.enemys.append(enemySpawns(Diffuculty, self))
         print('creating POIs')
         self.Objectives = (SpawnObjectives(self,ObjectivesNum,Diffuculty))
+        self.treasure = spawnchest(self,loot, Diffuculty)
+        self.jars = spawnJars(self, maxjars)
+        print('Completed Generation')
+    def DrawMap(self,map):
+        # Draw a solid blue circle in the center
+        tile = pygame.Surface((10, 10))
+        wall = pygame.Surface((5, 10))
+        corner = pygame.Surface((5, 5))
+        start = pygame.Surface((20, 20))
+        Objective = pygame.Surface((30, 30))
+        treasure = pygame.Surface((10, 30))
+        treasure.fill((0, 255, 170))
+        Objective.fill((0, 255, 0))
+        enemytile = pygame.Surface((10, 10))
+        enemytile.fill((210, 150, 75))
+        start.fill((0, 0, 100))
+        corner.fill((127, 127, 127))
+        wall.fill((127, 127, 127))
+        tile.fill((255, 255, 255))
+        jar = pygame.Surface((10,10))
+        jar.fill((66, 245, 233))
+        for x in range(len(self.map)):
+            for y in range(len(self.map[x])):
+                if self.map[x][y].Active:
+                    if self.map[x][y].enemys:
+                        map.blit(enemytile, (x * 10, y * 10))
+                    else:
+                        map.blit(tile, (x * 10, y * 10))
+                if self.map[x][y].wall[1]:
+                    map.blit(wall, ((x * 10) + 10, y * 10))
+                if self.map[x][y].wall[3]:
+                    map.blit(wall, ((x * 10) - 5, y * 10))
+                rotatedwall = pygame.transform.rotate(wall, 270)
+                if self.map[x][y].wall[0]:
+                    map.blit(rotatedwall, (x * 10, (y * 10) - 5))
+                if self.map[x][y].wall[2]:
+                    map.blit(rotatedwall, (x * 10, (y * 10) + 10))
+                if self.map[x][y].corner[0]:
+                    map.blit(corner, ((x * 10) - 5, (y * 10) - 5))
+                if self.map[x][y].corner[1]:
+                    map.blit(corner, ((x * 10) + 10, (y * 10) - 5))
+                if self.map[x][y].corner[2]:
+                    map.blit(corner, ((x * 10) + 10, (y * 10) + 10))
+                if self.map[x][y].corner[3]:
+                    map.blit(corner, ((x * 10) - 5, (y * 10) + 10))
 
+        for i in self.Objectives:
+            map.blit(Objective, i.Location)
+        for i in self.treasure:
+            treasurecopy = pygame.transform.rotozoom(treasure, i.direction * 45, 1)
+            treasurecopy.set_colorkey((0, 0, 0))
+            map.blit(treasurecopy, i.Location)
+        for i in self.jars:
+            map.blit(jar, i.Location)
 
-
+        map.blit(start, self.startloc[0])
+        return map
