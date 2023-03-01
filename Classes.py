@@ -43,4 +43,75 @@ class Jar(POI):
         super(Jar, self).__init__(location)
     def open(self):
         pass
+class enemy(pygame.sprite.Sprite):
+    def __init__(self, ):
+        pass
 
+class Player(pygame.sprite.Sprite):
+    def __init__(self, startloc):
+        super(Player, self).__init__()
+        self.image = pygame.Surface((20,20))
+        self.image.fill((210, 75, 222))
+        self.tinyimage = pygame.Surface((5,5))
+        self.tinyimage.fill((210,75,222))
+        self.rect = self.tinyimage.get_rect()
+        self.rect.x = startloc[0]
+        self.rect.y = startloc[1]
+        self.speed = 2
+        self.obstruction = None
+    def Inventory(self):
+        pass
+    def Attack(self):
+        pass
+    def Health(self):
+        pass
+    def MoveUp(self, moveTime, screensize: tuple):
+        if moveTime <= 50:
+            location = (screensize[0]/2-25, screensize[1]/2 -moveTime-25)
+        else:
+            location = (screensize[0]/2 -25, screensize[1]/2-75)
+        return location
+    def MoveDown(self, moveTime, screensize: tuple):
+        if moveTime <= 50:
+            location = (screensize[0]/2-25, screensize[1]/2+moveTime-25)
+        else:
+            location = (screensize[0]/2 -25, screensize[1]/2+25)
+        return location
+    def MoveLeft(self, moveTime, screensize: tuple):
+        if moveTime <= 50:
+            location = (screensize[0]/2-25-moveTime, screensize[1]/2-25)
+        else:
+            location = (screensize[0]/2 -75, screensize[1]/2-25)
+        return location
+    def MoveRight(self, moveTime, screensize: tuple):
+        if moveTime <= 50:
+            location = (screensize[0]/2-25+moveTime, screensize[1]/2-25)
+        else:
+            location = (screensize[0]/2 +25, screensize[1]/2-25)
+        return location
+    def Sprint(self):
+        pass
+    def Checkcollisions(self, obstructions):
+        for obstruction in obstructions:
+            if self.rect.colliderect(obstruction):
+                self.obstruction = obstruction
+                return True
+        return False
+    def MoveFromWall(self, speed, camera_X, camera_Y, playerLocation):
+        overlaprect = self.rect.clip(self.obstruction)
+
+        if overlaprect.width > overlaprect.height:
+            if playerLocation[1] < self.obstruction.y:
+                camera_Y += speed
+                playerLocation[1] -= speed/5
+            else:
+                camera_Y -= speed
+                playerLocation[1] += speed/5
+        else:
+            if playerLocation[0] < self.obstruction.x:
+                camera_X += speed
+                playerLocation[0] -= speed/5
+            else:
+                camera_X -= speed
+                playerLocation[0] += speed/5
+        return [camera_X,camera_Y]

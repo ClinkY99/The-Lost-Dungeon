@@ -220,14 +220,26 @@ def SpawnWalls(generator):
                 #sets walls to be the return of the function
                 generator.map[coord[0]][coord[1]].wall = list(walls)
                 #checks for the cooridors are needed in all 4 directions
-                if walls[0] and walls[1]:
-                    generator.map[coord[0]][coord[1]].corner[1] = True
-                if walls[1] and walls[2]:
-                    generator.map[coord[0]][coord[1]].corner[2] = True
-                if walls[2] and walls[3]:
-                    generator.map[coord[0]][coord[1]].corner[3] = True
-                if walls[3] and walls[0]:
-                    generator.map[coord[0]][coord[1]].corner[0] = True
+                try:
+                    if walls[0] and walls[1] and generator.map[coord[0]+1][coord[1]-1]:
+                        generator.map[coord[0]][coord[1]].corner[1] = True
+                except:
+                    pass
+                try:
+                    if walls[1] and walls[2] and generator.map[coord[0]+1][coord[1]+1]:
+                        generator.map[coord[0]][coord[1]].corner[2] = True
+                except:
+                    pass
+                try:
+                    if walls[2] and walls[3] and generator.map[coord[0]-1][coord[1]+1]:
+                        generator.map[coord[0]][coord[1]].corner[3] = True
+                except:
+                    pass
+                try:
+                    if walls[3] and walls[0] and generator.map[coord[0]-1][coord[1]-1]:
+                        generator.map[coord[0]][coord[1]].corner[0] = True
+                except:
+                    pass
 
 def choosestart(generator, size):
     roomin = generator.rooms[random.randrange(0, len(generator.rooms))]
@@ -337,10 +349,9 @@ class ProceduralGenerator():
         self.treasure = spawnchest(self,loot, Diffuculty)
         self.jars = spawnJars(self, maxjars)
         print('Completed Generation')
-    def DrawMap(self,map):
+    def DrawMap(self,map, obstructions):
         # Draw a solid blue circle in the center
         tile = pygame.Surface((10, 10))
-        wall = pygame.Surface((5, 10))
         corner = pygame.Surface((5, 5))
         start = pygame.Surface((20, 20))
         Objective = pygame.Surface((30, 30))
@@ -351,10 +362,11 @@ class ProceduralGenerator():
         enemytile.fill((210, 150, 75))
         start.fill((0, 0, 100))
         corner.fill((127, 127, 127))
-        wall.fill((127, 127, 127))
         tile.fill((255, 255, 255))
         jar = pygame.Surface((10,10))
         jar.fill((66, 245, 233))
+        wall = pygame.Surface((5,10))
+        wall.fill((127,127,127))
         for x in range(len(self.map)):
             for y in range(len(self.map[x])):
                 if self.map[x][y].Active:
@@ -364,13 +376,21 @@ class ProceduralGenerator():
                         map.blit(tile, (x * 10, y * 10))
                 if self.map[x][y].wall[1]:
                     map.blit(wall, ((x * 10) + 10, y * 10))
+                    wallrect = pygame.Rect((x * 10) + 10,y * 10, 5,10)
+                    obstructions.append(wallrect)
                 if self.map[x][y].wall[3]:
                     map.blit(wall, ((x * 10) - 5, y * 10))
+                    wallrect = pygame.Rect((x * 10) - 5, y * 10, 5, 10)
+                    obstructions.append(wallrect)
                 rotatedwall = pygame.transform.rotate(wall, 270)
                 if self.map[x][y].wall[0]:
                     map.blit(rotatedwall, (x * 10, (y * 10) - 5))
+                    wallrect = pygame.Rect(x * 10, (y * 10) - 5, 10, 5)
+                    obstructions.append(wallrect)
                 if self.map[x][y].wall[2]:
                     map.blit(rotatedwall, (x * 10, (y * 10) + 10))
+                    wallrect = pygame.Rect(x * 10, (y * 10) + 10, 10, 5)
+                    obstructions.append(wallrect)
                 if self.map[x][y].corner[0]:
                     map.blit(corner, ((x * 10) - 5, (y * 10) - 5))
                 if self.map[x][y].corner[1]:
@@ -388,6 +408,8 @@ class ProceduralGenerator():
             map.blit(treasurecopy, i.Location)
         for i in self.jars:
             map.blit(jar, i.Location)
+            jarrect = pygame.Rect(i.Location[0], i.Location[1], 10,10)
+            obstructions.append(jarrect)
 
         map.blit(start, self.startloc[0])
         return map
