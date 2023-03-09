@@ -6,10 +6,11 @@ from Classes import Tile, EnemySpawn
 import Classes
 import math
 def SpawnRoom(roomMin, roomMax, distancebetween, size, generator):
+    #generates room size
     roomsize = (random.randrange(roomMin,roomMax), random.randrange(roomMin,roomMax))
     searching = True
     while searching:
-        #force first room to be in center of map, generate off that. pick random room start room each time, if overlapps or goes off screen reloop
+        #if it is the first room pick anywhere on the grid
         if len(generator.rooms) == 0:
             locationtopleft = (int((size[0]-roomsize[0])/2), int((size[1]-roomsize[1])/2))
             searching = False
@@ -18,6 +19,7 @@ def SpawnRoom(roomMin, roomMax, distancebetween, size, generator):
                 generateoff = generator.rooms[random.randrange(0, len(generator.rooms)-1)]
             except:
                 generateoff = generator.rooms[0]
+            #creates a dictionary of all possible locations, remvoes overlap
             Xloc = {
                 0:random.randrange(generateoff[1][0]-distancebetween-roomsize[0], generateoff[1][0]+2-roomsize[0]),
                 1:random.randrange(generateoff[1][0]+generateoff[0][0] -2 ,generateoff[1][0] + distancebetween +generateoff[0][0])
@@ -26,8 +28,9 @@ def SpawnRoom(roomMin, roomMax, distancebetween, size, generator):
                 0:random.randrange(generateoff[1][1]-distancebetween-roomsize[1], generateoff[1][1]+2-roomsize[1]),
                 1:random.randrange(generateoff[1][1] + generateoff[0][1] - 2 ,generateoff[1][1] + generateoff[0][1]+roomsize[1]+distancebetween)
             }
-
+            #picks one of the 2 items in the dictonary
             locationtopleft = (Xloc[random.randrange(0,2)], YLoc[random.randrange(0,2)])
+            #if it is outside of the screen. or is in the start room
             if locationtopleft[0] <0 or locationtopleft[0] >size[0] -roomsize[0] or locationtopleft[1] < 0 or locationtopleft[1] > size[1] - roomsize[1]:
                 searching = True
             elif locationtopleft in generateoff[2]:
@@ -35,6 +38,7 @@ def SpawnRoom(roomMin, roomMax, distancebetween, size, generator):
             else:
                 searching = False
     tiles = []
+    #creates all tiles
     for x in range(locationtopleft[0], locationtopleft[0] + roomsize[0]):
         for y in range(locationtopleft[1], locationtopleft[1] + roomsize[1]):
             generator.map[x][y].Active = True
@@ -242,16 +246,23 @@ def SpawnWalls(generator):
                     pass
 
 def choosestart(generator, size):
+    #choses the room it is in
     roomin = generator.rooms[random.randrange(0, len(generator.rooms))]
+    #picks a tile to spawn the start in
     location = (random.randrange(roomin[1][0], roomin[1][0]+roomin[0][0]-2)*10, random.randrange(roomin[1][1], roomin[1][1]+roomin[0][1]-2)*10)
     return location, roomin
 def enemySpawns(diffuculty, generator):
+    #gets a list of all rooms
     locationstospawnenemys = list(generator.rooms)
+    #removes start room
     locationstospawnenemys.remove(generator.startRoom)
+    #loops through a random number based of the diffuculty
     enemys = []
     for i in range(0, random.randrange(diffuculty*generator.diffucultyincrese*2, diffuculty*generator.diffucultyincrese*5)):
+        #if no rooms possible to be spawned in stop the loop
         if len(locationstospawnenemys) == 0:
             break
+        #picks the room and the tile and sets it to be a spawnee
         room = list(locationstospawnenemys[random.randrange(0, len(locationstospawnenemys))])
         tile = room[2][random.randrange(0, len(room[2]))]
         generator.map[tile[0]][tile[1]].enemys = True
@@ -271,11 +282,13 @@ def SpawnObjectives(generator, numObjectives, diffuculty):
 
 
 def poispawnloc(generator, size, rooms):
+    #generates spawn location for POI
     room = list(rooms[random.randrange(0, len(rooms))])
     location = (random.randrange(room[1][0], room[1][0]+room[0][0]-size[0]), random.randrange(room[1][1], room[1][1]+room[0][1]-size[1]))
     rooms.remove(room)
     return location
 def spawnchest(generator, loot, diffuculty):
+    #spawns chests
     chests = []
     rooms = list(generator.rooms)
     for i in range(0, random.randrange(1,loot)):
@@ -283,6 +296,7 @@ def spawnchest(generator, loot, diffuculty):
     return chests
 def spawnJars(generator, maxjarchance):
     jars = []
+    #spawns jars
     for i in range(random.randrange(1,maxjarchance)):
         location = generator.edgerooms[random.randrange(0,len(generator.edgerooms))]
         jars.append(Classes.Jar(location))
@@ -350,7 +364,7 @@ class ProceduralGenerator():
         self.jars = spawnJars(self, maxjars)
         print('Completed Generation')
     def DrawMap(self,map, obstructions):
-        # Draw a solid blue circle in the center
+        #sets up all Surfaces
         tile = pygame.Surface((10, 10))
         corner = pygame.Surface((5, 5))
         start = pygame.Surface((20, 20))
@@ -367,6 +381,7 @@ class ProceduralGenerator():
         jar.fill((66, 245, 233))
         wall = pygame.Surface((5,10))
         wall.fill((127,127,127))
+        #loops through all tiles in map and if they have walls or tiles draw them on the map surface
         for x in range(len(self.map)):
             for y in range(len(self.map[x])):
                 if self.map[x][y].Active:
@@ -399,7 +414,7 @@ class ProceduralGenerator():
                     map.blit(corner, ((x * 10) + 10, (y * 10) + 10))
                 if self.map[x][y].corner[3]:
                     map.blit(corner, ((x * 10) - 5, (y * 10) + 10))
-
+        #loops through all pois and draws them to the map
         for i in self.Objectives:
             map.blit(Objective, i.Location)
         for i in self.treasure:
@@ -410,6 +425,6 @@ class ProceduralGenerator():
             map.blit(jar, i.Location)
             jarrect = pygame.Rect(i.Location[0], i.Location[1], 10,10)
             obstructions.append(jarrect)
-
+        #adds start location
         map.blit(start, self.startloc[0])
         return map

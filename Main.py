@@ -82,7 +82,6 @@ while running:
                     mapopen = True
             elif event.key == pygame.K_ESCAPE:
                 running = False
-                pygame.quit()
 
 
         #if player moves the mouse calculate new angle for the direction indicator

@@ -61,7 +61,7 @@ class Player(pygame.sprite.Sprite):
         self.obstruction = None
     def Inventory(self):
         pass
-    def Attack(self):
+    def Attack(self, angle):
         pass
     def Health(self):
         pass
