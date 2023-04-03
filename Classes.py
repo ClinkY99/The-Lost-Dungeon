@@ -1,4 +1,5 @@
 import pygame
+import Functions
 #class Enemy(pygame.sprite.Sprite):
 
 
@@ -20,6 +21,7 @@ class StartLoc():
 
 class POI():
     def __init__(self, Location, EnemySpawn = False, NumEnemys = 0):
+
         self.Location = (Location[0]*10, Location[1]*10)
         if EnemySpawn:
             self.NumEnemys = NumEnemys
@@ -38,17 +40,49 @@ class Treasure(POI):
         self.direction = direction
     def open(self):
         pass
-class Jar(POI):
+
+class Jar(pygame.sprite.Sprite):
     def __init__(self,location):
-        super(Jar, self).__init__(location)
-    def open(self):
-        pass
+        super(Jar, self).__init__()
+        self.image = pygame.Surface((10,10))
+        self.image.fill((66,245,233))
+        self.rect = self.image.get_rect()
+        self.rect.x = location[0]*10
+        self.rect.y = location[1]*10
+    def damage(self, damage, level):
+        self.kill()
+        level.UpdateChangables()
+
+
+class wall(pygame.sprite.Sprite):
+    def __init__(self, x, y, width, height):
+        super(wall, self).__init__()
+        self.image = pygame.Surface((width,height))
+        self.image.fill((127,127,127))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
 class enemy(pygame.sprite.Sprite):
     def __init__(self, ):
         pass
 
+class weapon(object):
+    def __init__(self, range, damage):
+        super(weapon, self).__init__()
+        self.range = range
+        self.damage = damage
+    def attack(self, angle, startpoint, damagables,size, level):
+        hit = Functions.OverlapLine(self.range, angle, startpoint, damagables,size)
+        for i in hit:
+            i.damage(self.damage, level)
+
+class basicsword(weapon):
+    def __init__(self):
+        super(basicsword, self).__init__(50,50)
+
+
 class Player(pygame.sprite.Sprite):
-    def __init__(self, startloc):
+    def __init__(self, startloc, level):
         super(Player, self).__init__()
         self.image = pygame.Surface((20,20))
         self.image.fill((210, 75, 222))
@@ -59,40 +93,42 @@ class Player(pygame.sprite.Sprite):
         self.rect.y = startloc[1]
         self.speed = 2
         self.obstruction = None
+        self.weilded = basicsword()
+        self.level = level
     def Inventory(self):
         pass
-    def Attack(self, angle):
-        pass
+    def Attack(self, angle, damagables, size):
+        self.weilded.attack(angle, self.rect.center, damagables, size, self.level)
     def Health(self):
         pass
-    def MoveUp(self, moveTime, screensize: tuple):
-        if moveTime <= 50:
-            location = (screensize[0]/2-25, screensize[1]/2 -moveTime-25)
-        else:
-            location = (screensize[0]/2 -25, screensize[1]/2-75)
-        return location
-    def MoveDown(self, moveTime, screensize: tuple):
-        if moveTime <= 50:
-            location = (screensize[0]/2-25, screensize[1]/2+moveTime-25)
-        else:
-            location = (screensize[0]/2 -25, screensize[1]/2+25)
-        return location
-    def MoveLeft(self, moveTime, screensize: tuple):
-        if moveTime <= 50:
-            location = (screensize[0]/2-25-moveTime, screensize[1]/2-25)
-        else:
-            location = (screensize[0]/2 -75, screensize[1]/2-25)
-        return location
-    def MoveRight(self, moveTime, screensize: tuple):
-        if moveTime <= 50:
-            location = (screensize[0]/2-25+moveTime, screensize[1]/2-25)
-        else:
-            location = (screensize[0]/2 +25, screensize[1]/2-25)
-        return location
+    # def MoveUp(self, moveTime, screensize: tuple):
+    #     if moveTime <= 50:
+    #         location = (screensize[0]/2-25, screensize[1]/2 -moveTime-25)
+    #     else:
+    #         location = (screensize[0]/2 -25, screensize[1]/2-75)
+    #     return location
+    # def MoveDown(self, moveTime, screensize: tuple):
+    #     if moveTime <= 50:
+    #         location = (screensize[0]/2-25, screensize[1]/2+moveTime-25)
+    #     else:
+    #         location = (screensize[0]/2 -25, screensize[1]/2+25)
+    #     return location
+    # def MoveLeft(self, moveTime, screensize: tuple):
+    #     if moveTime <= 50:
+    #         location = (screensize[0]/2-25-moveTime, screensize[1]/2-25)
+    #     else:
+    #         location = (screensize[0]/2 -75, screensize[1]/2-25)
+    #     return location
+    # def MoveRight(self, moveTime, screensize: tuple):
+    #     if moveTime <= 50:
+    #         location = (screensize[0]/2-25+moveTime, screensize[1]/2-25)
+    #     else:
+    #         location = (screensize[0]/2 +25, screensize[1]/2-25)
+    #     return location
     def Sprint(self):
         pass
     def Checkcollisions(self, obstructions):
-        for obstruction in obstructions:
+        for obstruction in obstructions.sprites():
             if self.rect.colliderect(obstruction):
                 self.obstruction = obstruction
                 return True
@@ -101,14 +137,14 @@ class Player(pygame.sprite.Sprite):
         overlaprect = self.rect.clip(self.obstruction)
 
         if overlaprect.width > overlaprect.height:
-            if playerLocation[1] < self.obstruction.y:
+            if playerLocation[1] < self.obstruction.rect.y:
                 camera_Y += speed
                 playerLocation[1] -= speed/5
             else:
                 camera_Y -= speed
                 playerLocation[1] += speed/5
         else:
-            if playerLocation[0] < self.obstruction.x:
+            if playerLocation[0] < self.obstruction.rect.x:
                 camera_X += speed
                 playerLocation[0] -= speed/5
             else:

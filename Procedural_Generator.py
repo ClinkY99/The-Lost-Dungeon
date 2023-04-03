@@ -295,11 +295,11 @@ def spawnchest(generator, loot, diffuculty):
         chests.append((Classes.Treasure(poispawnloc(generator,(6,6),rooms), random.randrange(0,8), math.ceil(diffuculty/4), 4)))
     return chests
 def spawnJars(generator, maxjarchance):
-    jars = []
+    jars = pygame.sprite.Group()
     #spawns jars
     for i in range(random.randrange(1,maxjarchance)):
         location = generator.edgerooms[random.randrange(0,len(generator.edgerooms))]
-        jars.append(Classes.Jar(location))
+        jars.add(Classes.Jar(location))
     return jars
 
 class ProceduralGenerator():
@@ -329,7 +329,7 @@ class ProceduralGenerator():
         self.Objectivesnum = 2
         self.loot = 0
         self.edgerooms = []
-        self.jars = []
+        self.jars = pygame.sprite.Group()
         #creates grid
         for x in range(length):
             new_row = []
@@ -363,49 +363,33 @@ class ProceduralGenerator():
         self.treasure = spawnchest(self,loot, Diffuculty)
         self.jars = spawnJars(self, maxjars)
         print('Completed Generation')
-    def DrawMap(self,map, obstructions):
+    def DrawMap(self,map):
         #sets up all Surfaces
-        tile = pygame.Surface((10, 10))
+        obstructions = pygame.sprite.Group()
+        floortile = pygame.Surface((10, 10))
         corner = pygame.Surface((5, 5))
         start = pygame.Surface((20, 20))
-        Objective = pygame.Surface((30, 30))
-        treasure = pygame.Surface((10, 30))
-        treasure.fill((0, 255, 170))
-        Objective.fill((0, 255, 0))
+
         enemytile = pygame.Surface((10, 10))
         enemytile.fill((210, 150, 75))
         start.fill((0, 0, 100))
         corner.fill((127, 127, 127))
-        tile.fill((255, 255, 255))
-        jar = pygame.Surface((10,10))
-        jar.fill((66, 245, 233))
+        floortile.fill((255, 255, 255))
         wall = pygame.Surface((5,10))
         wall.fill((127,127,127))
         #loops through all tiles in map and if they have walls or tiles draw them on the map surface
         for x in range(len(self.map)):
             for y in range(len(self.map[x])):
+                tile = self.map[x][y]
                 if self.map[x][y].Active:
                     if self.map[x][y].enemys:
                         map.blit(enemytile, (x * 10, y * 10))
                     else:
-                        map.blit(tile, (x * 10, y * 10))
-                if self.map[x][y].wall[1]:
-                    map.blit(wall, ((x * 10) + 10, y * 10))
-                    wallrect = pygame.Rect((x * 10) + 10,y * 10, 5,10)
-                    obstructions.append(wallrect)
-                if self.map[x][y].wall[3]:
-                    map.blit(wall, ((x * 10) - 5, y * 10))
-                    wallrect = pygame.Rect((x * 10) - 5, y * 10, 5, 10)
-                    obstructions.append(wallrect)
-                rotatedwall = pygame.transform.rotate(wall, 270)
-                if self.map[x][y].wall[0]:
-                    map.blit(rotatedwall, (x * 10, (y * 10) - 5))
-                    wallrect = pygame.Rect(x * 10, (y * 10) - 5, 10, 5)
-                    obstructions.append(wallrect)
-                if self.map[x][y].wall[2]:
-                    map.blit(rotatedwall, (x * 10, (y * 10) + 10))
-                    wallrect = pygame.Rect(x * 10, (y * 10) + 10, 10, 5)
-                    obstructions.append(wallrect)
+                        map.blit(floortile, (x * 10, y * 10))
+                for i in tile.wall:
+                    if i:
+                        map.blit(i.image, i.rect)
+                        obstructions.add(i)
                 if self.map[x][y].corner[0]:
                     map.blit(corner, ((x * 10) - 5, (y * 10) - 5))
                 if self.map[x][y].corner[1]:
@@ -415,16 +399,21 @@ class ProceduralGenerator():
                 if self.map[x][y].corner[3]:
                     map.blit(corner, ((x * 10) - 5, (y * 10) + 10))
         #loops through all pois and draws them to the map
+        obstructions.add(self.jars.sprites())
+        #adds start location
+        map.blit(start, self.startloc[0])
+        return map, obstructions
+
+    def DrawChangebles(self, map):
+        Objective = pygame.Surface((30, 30))
+        treasure = pygame.Surface((10, 30))
+        treasure.fill((0, 255, 170))
+        Objective.fill((0, 255, 0))
+        self.jars.draw(map)
         for i in self.Objectives:
             map.blit(Objective, i.Location)
         for i in self.treasure:
             treasurecopy = pygame.transform.rotozoom(treasure, i.direction * 45, 1)
             treasurecopy.set_colorkey((0, 0, 0))
             map.blit(treasurecopy, i.Location)
-        for i in self.jars:
-            map.blit(jar, i.Location)
-            jarrect = pygame.Rect(i.Location[0], i.Location[1], 10,10)
-            obstructions.append(jarrect)
-        #adds start location
-        map.blit(start, self.startloc[0])
         return map
