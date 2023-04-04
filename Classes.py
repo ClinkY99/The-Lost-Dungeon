@@ -1,3 +1,6 @@
+import math
+import random
+
 import pygame
 import Functions
 from pathfinding.core.grid import Grid
@@ -57,16 +60,22 @@ class Tile():
         self.wall = [False,False,False,False]
         self.corner = [False,False,False,False]
         self.enemys = False
-class EnemySpawn():
+class EnemySpawn(pygame.sprite.Sprite):
     def __init__(self, NumberEnemys, Location):
+        super(EnemySpawn, self).__init__()
         self.NumberEnemys= NumberEnemys
         self.Location = Location
-
     def Spawn(self):
+        print("spawned")
         enemysspawned = pygame.sprite.Group()
         for i in range(self.NumberEnemys):
-            enemysspawned.add(basicenemy(self.Location))
+            enemysspawned.add(basicenemy((self.Location[0] + random.randrange(-10,10), self.Location[1] + random.randrange(-10,10))))
+        self.kill()
         return enemysspawned
+    def CheckSpawn(self, playerlocation):
+        distance = math.sqrt((playerlocation[0]-self.Location[0])**2 + (playerlocation[1]-self.Location[1])**2)
+        if distance < 50:
+            self.Spawn()
 class StartLoc():
     def __init__(self, Location):
         self.Location = Location

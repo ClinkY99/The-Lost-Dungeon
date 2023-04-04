@@ -104,6 +104,7 @@ class game(object):
         while self.running:
             self.eventcheck()
             self.Movement()
+            self.interactioncheck()
             self.update()
 
     def eventcheck(self):
@@ -127,15 +128,15 @@ class game(object):
                     self.player.Attack(self.angle, self.damagables, (self.ScreenLength, self.ScreenWidth))
 
 
-            # if player moves the mouse calculate new angle for the direction indicator
-            elif event.type == pygame.MOUSEMOTION and not self.skipmousecheck:
-                mouse_x, mouse_y = event.pos
-                mouse_rel_x, mouse_rel_y = event.rel
-                if abs(mouse_rel_x) > abs(mouse_rel_y):
-                    self.angle += math.ceil(mouse_rel_x / 5)
-
-                else:
-                    self.angle += math.ceil(mouse_rel_y / 5)
+            # # if player moves the mouse calculate new angle for the direction indicator
+            # elif event.type == pygame.MOUSEMOTION and not self.skipmousecheck:
+            #     mouse_x, mouse_y = event.pos
+            #     mouse_rel_x, mouse_rel_y = event.rel
+            #     if abs(mouse_rel_x) > abs(mouse_rel_y):
+            #         self.angle += math.ceil(mouse_rel_x / 5)
+            #
+            #     else:
+            #         self.angle += math.ceil(mouse_rel_y / 5)
     def Movement(self):
         # gets all keys and does movment for the player.
         keys = pygame.key.get_pressed()
@@ -185,8 +186,15 @@ class game(object):
             # moveTime += 1
             # print(moveTime)
             # print(playerLocation)
+        if keys[pygame.K_q]:
+            self.angle -=1
+        if keys[pygame.K_e]:
+            self.angle += 1
         if self.playerLocation == (self.ScreenLength / 2 - 25, self.ScreenWidth / 2 - 25):
             moveTime = 1
+    def interactioncheck(self):
+        for i in self.generator.enemys.sprites():
+            i.CheckSpawn(self.playerLocation)
 
     def update(self):
         # rotates direction indicator based off angle

@@ -257,7 +257,7 @@ def enemySpawns(diffuculty, generator):
     #removes start room
     locationstospawnenemys.remove(generator.startRoom)
     #loops through a random number based of the diffuculty
-    enemys = []
+    enemys = pygame.sprite.Group()
     for i in range(0, random.randrange(diffuculty*generator.diffucultyincrese*2, diffuculty*generator.diffucultyincrese*5)):
         #if no rooms possible to be spawned in stop the loop
         if len(locationstospawnenemys) == 0:
@@ -267,9 +267,9 @@ def enemySpawns(diffuculty, generator):
         tile = room[2][random.randrange(0, len(room[2]))]
         generator.map[tile[0]][tile[1]].enemys = True
         try:
-            enemys.append(EnemySpawn(random.randrange(1,math.ceil(diffuculty/4)), tile))
+            enemys.add(EnemySpawn(random.randrange(1,math.ceil(diffuculty/4)), (tile[0] * 10, tile[1] *10)))
         except:
-            enemys.append(EnemySpawn(1, tile))
+            enemys.add(EnemySpawn(1, (tile[0] * 10, tile[1] *10)))
     return enemys
 def SpawnObjectives(generator, numObjectives, diffuculty):
     Objectives = []
@@ -357,7 +357,7 @@ class ProceduralGenerator():
         self.startloc = choosestart(self, self.size)
         self.startRoom = self.startloc[1]
         print('spawning enemys')
-        self.enemys.append(enemySpawns(Diffuculty, self))
+        self.enemys = enemySpawns(Diffuculty, self)
         print('creating POIs')
         self.Objectives = (SpawnObjectives(self,ObjectivesNum,Diffuculty))
         self.treasure = spawnchest(self,loot, Diffuculty)
