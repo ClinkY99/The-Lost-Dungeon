@@ -76,7 +76,6 @@ class game(object):
         # draws map
         self.StaticMap, self.obstructions = self.generator.DrawMap(self.StaticMap)
         self.changeblesoverlay = self.generator.DrawChangebles(self.changeblesoverlay)
-        self.changeblesoverlay.set_colorkey((0, 0, 0))
         self.map.blit(self.StaticMap, (0, 0))
         self.map.blit(self.changeblesoverlay, (0, 0))
 
@@ -85,7 +84,7 @@ class game(object):
         # sets up main verables
         self.camera_X = 0 - self.generator.startloc[0][0] * 5 + self.ScreenLength / 2 - 10
         self.camera_Y = 0 - self.generator.startloc[0][1] * 5 + self.ScreenWidth / 2 - 10
-        self.cameraSpeed = 1
+        self.cameraSpeed = .5
         self.mapsize = self.map.get_size()
         self.newsize = (self.mapsize[0] * 5, self.mapsize[1] * 5)
         self.BIGStaticMap = pygame.transform.scale(self.StaticMap, self.newsize)
@@ -115,6 +114,8 @@ class game(object):
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_m:
                     self.maptriggered = False
+                elif event.key == pygame.K_LSHIFT:
+                    self.cameraSpeed = .5
             elif event.type == pygame.KEYDOWN:
                 # if user presses M open map
                 if event.key == pygame.K_m:
@@ -126,6 +127,10 @@ class game(object):
                     self.running = False
                 elif event.key == pygame.K_SPACE:
                     self.player.Attack(self.angle, self.damagables, (self.ScreenLength, self.ScreenWidth))
+                elif event.key == pygame.K_LSHIFT:
+                    print('test')
+                    self.cameraSpeed = 1
+
 
 
             # # if player moves the mouse calculate new angle for the direction indicator
@@ -143,40 +148,57 @@ class game(object):
 
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             if not self.player.Checkcollisions(self.obstructions):
-                self.camera_X += self.cameraSpeed
-                self.playerLocation[0] -= self.cameraSpeed / 5
+                self.camera_X += self.cameraSpeed * math.cos(math.radians(self.angle -45))
+                self.camera_Y += self.cameraSpeed * math.sin(math.radians(self.angle -45))
+                self.playerLocation[0] += self.cameraSpeed * math.cos(math.radians(self.angle - 225)) / 5
+                self.playerLocation[1] += self.cameraSpeed * math.sin(math.radians(self.angle - 225)) / 5
             else:
-                self.movement = self.player.MoveFromWall(self.cameraSpeed, self.camera_X, self.camera_Y, self.playerLocation)
-                self.camera_X = self.movement[0]
-                self.camera_Y = self.movement[1]
+                movement = self.player.MoveFromWall(self.cameraSpeed, self.camera_X, self.camera_Y, self.playerLocation)
+                self.camera_X = movement[0]
+                self.camera_Y = movement[1]
             # playerLocation = player.MoveLeft(moveTime, (ScreenLength,ScreenWidth))
             # moveTime +=1
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             if not self.player.Checkcollisions(self.obstructions):
-                self.camera_X -= self.cameraSpeed
-                self.playerLocation[0] += self.cameraSpeed / 5
+                self.camera_X += self.cameraSpeed * math.cos(math.radians(self.angle + 135))
+                self.camera_Y += self.cameraSpeed * math.sin(math.radians(self.angle + 135))
+                self.playerLocation[0] += self.cameraSpeed * math.cos(math.radians(self.angle - 45)) / 5
+                self.playerLocation[1] += self.cameraSpeed * math.sin(math.radians(self.angle - 45)) / 5
             else:
-                self.movement = self.player.MoveFromWall(self.cameraSpeed, self.camera_X, self.camera_Y, self.playerLocation)
-                self.camera_X = self.movement[0]
-                self.camera_Y = self.movement[1]
+                movement = self.player.MoveFromWall(self.cameraSpeed, self.camera_X, self.camera_Y, self.playerLocation)
+                self.camera_X = movement[0]
+                self.camera_Y = movement[1]
 
             # playerLocation = player.MoveRight(moveTime, (ScreenLength, ScreenWidth))
             # moveTime += 1
         if keys[pygame.K_UP] or keys[pygame.K_w]:
-            if not self.player.Checkcollisions(self.obstructions):
-                self.camera_Y += self.cameraSpeed
-                self.playerLocation[1] -= self.cameraSpeed / 5
-            else:
-                self.movement = self.player.MoveFromWall(self.cameraSpeed, self.camera_X, self.camera_Y, self.playerLocation)
-                self.camera_X = self.movement[0]
-                self.camera_Y = self.movement[1]
+            # if not self.player.Checkcollisions(self.obstructions):
+            #     self.camera_Y += self.cameraSpeed
+            #     self.playerLocation[1] -= self.cameraSpeed / 5
+            # else:
+            #     movement = self.player.MoveFromWall(self.cameraSpeed, self.camera_X, self.camera_Y, self.playerLocation)
+            #     self.camera_X = movement[0]
+            #     self.camera_Y = movement[1]
 
             # playerLocation = player.MoveUp(moveTime, (ScreenLength, ScreenWidth))
             # moveTime += 1
+            if not self.player.Checkcollisions(self.obstructions):
+                self.camera_X += self.cameraSpeed * math.cos(math.radians(self.angle+45))
+                self.camera_Y += self.cameraSpeed * math.sin(math.radians(self.angle+45))
+                self.playerLocation[0] += self.cameraSpeed * math.cos(math.radians(self.angle-135))/5
+                self.playerLocation[1] += self.cameraSpeed * math.sin(math.radians(self.angle-135))/5
+            else:
+                movement = self.player.MoveFromWall(self.cameraSpeed, self.camera_X, self.camera_Y, self.playerLocation)
+                self.camera_X = movement[0]
+                self.camera_Y = movement[1]
+
+
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             if not self.player.Checkcollisions(self.obstructions):
-                self.camera_Y -= self.cameraSpeed
-                self.playerLocation[1] += self.cameraSpeed / 5
+                self.camera_X += self.cameraSpeed * math.cos(math.radians(self.angle + 225))
+                self.camera_Y += self.cameraSpeed * math.sin(math.radians(self.angle + 225))
+                self.playerLocation[0] += self.cameraSpeed * math.cos(math.radians(self.angle - 315)) / 5
+                self.playerLocation[1] += self.cameraSpeed * math.sin(math.radians(self.angle - 315)) / 5
             else:
                 self.movement = self.player.MoveFromWall(self.cameraSpeed, self.camera_X, self.camera_Y, self.playerLocation)
                 self.camera_X = self.movement[0]
@@ -230,7 +252,6 @@ class game(object):
         print('test')
         self.changeblesoverlay.fill((0,0,0))
         self.changeblesoverlay = self.generator.DrawChangebles(self.changeblesoverlay)
-        self.changeblesoverlay.set_colorkey((0, 0, 0))
         BigChangablesoverlay = pygame.transform.scale(self.changeblesoverlay, self.newsize)
         self.BIGmap.fill((0,0,0))
         self.BIGmap.blit(self.BIGStaticMap, (0, 0))

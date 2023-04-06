@@ -276,7 +276,7 @@ def SpawnObjectives(generator, numObjectives, diffuculty):
     rooms = list(generator.rooms)
     rooms.remove(generator.startRoom)
     for i in range(0, numObjectives):
-        Objectives.append(Classes.Objective(poispawnloc(generator, (3,3), rooms), math.ceil(diffuculty/2)))
+        Objectives.append(Classes.Objective(poispawnloc(generator, (5,5), rooms), math.ceil(diffuculty/2)))
     return Objectives
 
 
@@ -369,7 +369,6 @@ class ProceduralGenerator():
         floortile = pygame.Surface((10, 10))
         corner = pygame.Surface((5, 5))
         start = pygame.Surface((20, 20))
-
         enemytile = pygame.Surface((10, 10))
         enemytile.fill((210, 150, 75))
         start.fill((0, 0, 100))
@@ -405,11 +404,11 @@ class ProceduralGenerator():
         return map, obstructions
 
     def DrawChangebles(self, map):
-        Objective = pygame.Surface((30, 30))
+        Objective = pygame.image.load('./Art/Interactables/Objectives/Objective Unactive.png').convert()
         treasure = pygame.Surface((10, 30))
         treasure.fill((0, 255, 170))
-        Objective.fill((0, 255, 0))
         self.jars.draw(map)
+        map.set_colorkey((0,0,0))
         for i in self.Objectives:
             map.blit(Objective, i.Location)
         for i in self.treasure:

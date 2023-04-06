@@ -91,11 +91,27 @@ class POI():
         else:
             self.NumEnemys = -1
 
-class Objective(POI):
+class Objective(pygame.sprite.Sprite):
     def __init__(self, location, NumEnemys):
-        super(Objective, self).__init__(location,NumEnemys= NumEnemys, EnemySpawn= True)
+        super(Objective, self).__init__()
+        self.Location = (location[0] * 10, location[1] * 10)
+        self.NumEnemys = NumEnemys
+        self.image = pygame.image.load('./Art/Interactables/Objectives/Objective Unactive.png').convert()
+        self.rect = self.image.get_rect()
+        self.rect.x = self.Location[0]
+        self.rect.y = self.Location[1]
+        self.Forms = [self.image]
+        for i in range(1,2):
+            self.Forms.append(pygame.image.load(f'./Art/Interactables/Objectives/Objective Stage-{i}.png'))
     def Complete(self):
         pass
+    def Activate(self):
+        pass
+        #code for fading between images to add "animation"
+        #Figure it out future kieran.... :)
+        # def BlendSurface(image, pos, alpha):
+        #     image.set_alpha(min(1.0, alpha) * 255)
+        #     screen.blit(image, pos)
 class Treasure(POI):
     def __init__(self, location, direction, NumEnemys, contains):
         super(Treasure, self).__init__(location, NumEnemys=NumEnemys, EnemySpawn= True)
