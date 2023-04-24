@@ -272,11 +272,11 @@ def enemySpawns(diffuculty, generator):
             enemys.add(EnemySpawn(1, (tile[0] * 10, tile[1] *10)))
     return enemys
 def SpawnObjectives(generator, numObjectives, diffuculty):
-    Objectives = []
+    Objectives = pygame.sprite.Group()
     rooms = list(generator.rooms)
     rooms.remove(generator.startRoom)
     for i in range(0, numObjectives):
-        Objectives.append(Classes.Objective(poispawnloc(generator, (5,5), rooms), math.ceil(diffuculty/2)))
+        Objectives.add(Classes.Objective(poispawnloc(generator, (5,5), rooms), math.ceil(diffuculty/2)))
     return Objectives
 
 
@@ -306,6 +306,7 @@ class ProceduralGenerator():
     #init function, sets up all variables
     def __init__(self,length, width,seed = None):
         super(ProceduralGenerator, self).__init__()
+        self.matrix = None
         self.size = (length-1, width-1)
         self.numrooms = None
         self.roomMax = None
@@ -380,8 +381,8 @@ class ProceduralGenerator():
         for x in range(len(self.map)):
             for y in range(len(self.map[x])):
                 tile = self.map[x][y]
-                if self.map[x][y].Active:
-                    if self.map[x][y].enemys:
+                if tile.Active:
+                    if tile.enemys:
                         map.blit(enemytile, (x * 10, y * 10))
                     else:
                         map.blit(floortile, (x * 10, y * 10))
@@ -389,13 +390,13 @@ class ProceduralGenerator():
                     if i:
                         map.blit(i.image, i.rect)
                         obstructions.add(i)
-                if self.map[x][y].corner[0]:
+                if tile.corner[0]:
                     map.blit(corner, ((x * 10) - 5, (y * 10) - 5))
-                if self.map[x][y].corner[1]:
+                if tile.corner[1]:
                     map.blit(corner, ((x * 10) + 10, (y * 10) - 5))
-                if self.map[x][y].corner[2]:
+                if tile.corner[2]:
                     map.blit(corner, ((x * 10) + 10, (y * 10) + 10))
-                if self.map[x][y].corner[3]:
+                if tile.corner[3]:
                     map.blit(corner, ((x * 10) - 5, (y * 10) + 10))
         #loops through all pois and draws them to the map
         obstructions.add(self.jars.sprites())
@@ -404,13 +405,12 @@ class ProceduralGenerator():
         return map, obstructions
 
     def DrawChangebles(self, map):
-        Objective = pygame.image.load('./Art/Interactables/Objectives/Objective Unactive.png').convert()
         treasure = pygame.Surface((10, 30))
         treasure.fill((0, 255, 170))
-        self.jars.draw(map)
+        for jar in self.jars.sprites():
+            map.blit(jar.bigself.image, jar.bigself.rect)
         map.set_colorkey((0,0,0))
-        for i in self.Objectives:
-            map.blit(Objective, i.Location)
+        self.Objectives.draw(map)
         for i in self.treasure:
             treasurecopy = pygame.transform.rotozoom(treasure, i.direction * 45, 1)
             treasurecopy.set_colorkey((0, 0, 0))

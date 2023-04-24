@@ -3,16 +3,13 @@ import random
 
 import pygame
 import Functions
-from pathfinding.core.grid import Grid
-from pathfinding.finder.a_star import AStarFinder
-
 class Enemy(pygame.sprite.Sprite):
     def __init__(self,health, speed, attackdamage, location):
         super(Enemy, self).__init__()
         self.speed=speed
         self.health=health
         self.attackdamage=attackdamage
-        self.enemylocation = location
+        self.Location = location
         self.image = pygame.Surface((3, 3))
         self.image.fill((255,0,0))
         self.rect = self.image.get_rect()
@@ -23,37 +20,38 @@ class Enemy(pygame.sprite.Sprite):
         self.bigrect = self.Bigimage.get_rect()
         self.bigrect.x = location[0] * 5
         self.bigrect.y = location[1] *5
+    def moveToPlayer(self, playerlocation, obstructions):
+        distance = math.sqrt((playerlocation[0]-self.Location[0])**2 + (playerlocation[1]-self.Location[1])**2)
+        if distance < 200:
+            angle = math.atan((playerlocation[1] - self.Location[1]) / (playerlocation[0] - self.Location[0]))
+            collides = self.rect.collidelist(obstructions)
+            if collides:
+                overlapRect = self.rect.clip(collides)
+                if overlapRect.width > overlapRect.height:
+                    if math.cos(math.radians(angle)) > 0:
+                        self.rect.x += self.speed
+                    else:
+                        self.rect.x -= self.speed
+                else:
+                    if math.sin(math.radians(angle)) > 0:
+                        self.rect.y += self.speed
+                    else:
+                        self.rect.y -= self.speed
+            else:
+                self.rect.x += self.speed * math.cos(math.radians(angle))
+                self.rect.y += self.speed * math.sin(math.radians(angle))
+                self.Location = self.rect.x
+                self.Location = self.rect.y
 
-    def pathfinding(self, playerlocation):
-        matrix = [
-            [1, 1, 1, 1, 1, 1],
-            [1, 0, 1, 1, 1, 1],
-            [1, 1, 1, 1, 1, 1]]
+    def Update(self, playerlocation, obstructions):
+        self.moveToPlayer(playerlocation,obstructions)
+        #draw map stuff
 
-        # 1. create the grid with the nodes
-        field = Grid(matrix=matrix)
-
-        # 2. get start and end point
-
-        start = field.node(3, 3)
-        end = field.node(7, 3)
-
-        # 3. create a finder with the movement style
-        finder = AStarFinder()
-
-        # 4. returns a list with the path and the amount of times the finder had to run to get the path
-        path, runs = finder.find_path(start, end, grid)
-
-        # 5. print result
-        print(path)
 class basicenemy(Enemy):
     def __init__(self, location):
         super(basicenemy, self).__init__(1,1,1, location)
         self.weapon=1
         self.armour=1
-
-
-
 class Tile():
     def __init__(self):
         self.Active = False
@@ -65,17 +63,13 @@ class EnemySpawn(pygame.sprite.Sprite):
         super(EnemySpawn, self).__init__()
         self.NumberEnemys= NumberEnemys
         self.Location = Location
-    def Spawn(self):
+    def Spawn(self, playerlocation, matrix, map):
         print("spawned")
-        enemysspawned = pygame.sprite.Group()
-        for i in range(self.NumberEnemys):
-            enemysspawned.add(basicenemy((self.Location[0] + random.randrange(-10,10), self.Location[1] + random.randrange(-10,10))))
         self.kill()
-        return enemysspawned
-    def CheckSpawn(self, playerlocation):
+    def CheckSpawn(self, playerlocation, matrix, map):
         distance = math.sqrt((playerlocation[0]-self.Location[0])**2 + (playerlocation[1]-self.Location[1])**2)
-        if distance < 50:
-            self.Spawn()
+        if distance < 5:
+            self.Spawn(playerlocation, matrix, map)
 class StartLoc():
     def __init__(self, Location):
         self.Location = Location
@@ -96,15 +90,18 @@ class Objective(pygame.sprite.Sprite):
         super(Objective, self).__init__()
         self.Location = (location[0] * 10, location[1] * 10)
         self.NumEnemys = NumEnemys
-        self.image = pygame.image.load('./Art/Interactables/Objectives/Objective Unactive.png').convert()
+        self.image = pygame.transform.scale_by(pygame.image.load('./Art/Interactables/Objectives/Objective Unactive.png').convert(), 5)
         self.rect = self.image.get_rect()
-        self.rect.x = self.Location[0]
-        self.rect.y = self.Location[1]
+        self.rect.x = self.Location[0] * 5
+        self.rect.y = self.Location[1] * 5
         self.Forms = [self.image]
         for i in range(1,2):
-            self.Forms.append(pygame.image.load(f'./Art/Interactables/Objectives/Objective Stage-{i}.png'))
+            self.Forms.append(pygame.transform.scale_by(pygame.image.load(f'./Art/Interactables/Objectives/Objective Stage-{i}.png'), 5))
     def Complete(self):
         pass
+    def Interact(self):
+        self.Activate()
+        print('test')
     def Activate(self):
         pass
         #code for fading between images to add "animation"
@@ -128,10 +125,18 @@ class Jar(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = location[0]*10
         self.rect.y = location[1]*10
+        self.bigself = BigJar(location)
     def damage(self, damage, level):
         self.kill()
         level.UpdateChangables()
-
+class BigJar(pygame.sprite.Sprite):
+    def __init__(self, location):
+        super(BigJar, self).__init__()
+        self.image = pygame.Surface((50, 50))
+        self.image.fill((66, 245, 233))
+        self.rect = self.image.get_rect()
+        self.rect.x = location[0] * 50
+        self.rect.y = location[1] * 50
 
 class wall(pygame.sprite.Sprite):
     def __init__(self, x, y, width, height):
@@ -141,9 +146,6 @@ class wall(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-class enemy(pygame.sprite.Sprite):
-    def __init__(self, ):
-        pass
 
 class weapon(object):
     def __init__(self, range, damage):
@@ -176,6 +178,10 @@ class Player(pygame.sprite.Sprite):
         self.level = level
     def Inventory(self):
         pass
+    def Interact(self, interactables):
+        for i in interactables.sprites():
+            if self.rect.colliderect(i):
+                i.Interact()
     def Attack(self, angle, damagables, size):
         self.weilded.attack(angle, self.rect.center, damagables, size, self.level)
     def Health(self):
@@ -204,8 +210,6 @@ class Player(pygame.sprite.Sprite):
     #     else:
     #         location = (screensize[0]/2 +25, screensize[1]/2-25)
     #     return location
-    def Sprint(self):
-        pass
     def Checkcollisions(self, obstructions):
         for obstruction in obstructions.sprites():
             if self.rect.colliderect(obstruction):
@@ -214,26 +218,18 @@ class Player(pygame.sprite.Sprite):
         return False
     def MoveFromWall(self, speed, camera_X, camera_Y, playerLocation):
         overlaprect = self.rect.clip(self.obstruction)
-
         if overlaprect.width > overlaprect.height:
-            if playerLocation[1] < self.obstruction.rect.y:
+            if self.rect.y < self.obstruction.rect.y:
                 camera_Y += speed
                 playerLocation[1] -= speed/5
             else:
                 camera_Y -= speed
                 playerLocation[1] += speed/5
         else:
-            if playerLocation[0] < self.obstruction.rect.x:
+            if self.rect.x < self.obstruction.rect.x:
                 camera_X += speed
                 playerLocation[0] -= speed/5
             else:
                 camera_X -= speed
                 playerLocation[0] += speed/5
         return [camera_X,camera_Y]
-
-class enemymap():
-    def __init__(self):
-
-        enemies.draw(enemyoverlay)
-        enemyoverlay.set_colorkey((0, 0, 0))
-        enemiesoverlayBIG = pygame.transform.scale(enemyoverlay, newsize)

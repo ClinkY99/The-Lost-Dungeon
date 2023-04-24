@@ -24,12 +24,12 @@ class game(object):
         self.ScreenWidth = 1030
 
         #sets up the generator class with tile size
-        self.generator = ProceduralGenerator(int(self.ScreenLength / 10), int(self.ScreenWidth / 10), 50)
+        self.generator = ProceduralGenerator(int(self.ScreenLength / 10), int(self.ScreenWidth / 10))
 
         # Set up the drawing window
         self.screen = pygame.display.set_mode([self.ScreenLength, self.ScreenWidth])
         self.StaticMap = pygame.Surface((self.ScreenLength, self.ScreenWidth))
-        self.changeblesoverlay = pygame.Surface((self.ScreenLength, self.ScreenWidth))
+        self.changeblesoverlay = pygame.Surface((self.ScreenLength*5, self.ScreenWidth*5))
         self.map = pygame.Surface((self.ScreenLength, self.ScreenWidth))
 
         pygame.display.set_caption('The Lost Dungeon')
@@ -43,6 +43,8 @@ class game(object):
         self.direction_indicator = pygame.transform.scale_by(pygame.image.load("Art/Character/Direction-Temp.png"), 1 / 6).convert()
         self.direction_indicator.set_colorkey((255, 255, 255))
         self.direction_indicator_rect = self.direction_indicator.get_rect(center=(self.ScreenLength / 2, self.ScreenWidth / 2))
+
+        self.clock = pygame.time.Clock()
 
         self.damagables = None
         self.skipmousecheck = None
@@ -62,6 +64,9 @@ class game(object):
         self.player = None
         self.obstructions = None
         self.newsize = None
+        self.smallchangeblesoverlay = None
+        self.matrix = None
+        self.interactables = pygame.sprite.Group()
 
 
         #init
@@ -71,20 +76,22 @@ class game(object):
     def Generatelevel(self):
         # generates map
         self.generator.Generate(5, 10, 30, 5, True, 50, 10, 2, None, 1, 2, 5, 25)
+        self.matrix = self.generator.matrix
         # inits player
         self.player = Player((self.generator.startloc[0][0], self.generator.startloc[0][1]), self)
         # draws map
         self.StaticMap, self.obstructions = self.generator.DrawMap(self.StaticMap)
         self.changeblesoverlay = self.generator.DrawChangebles(self.changeblesoverlay)
+        self.smallchangeblesoverlay = pygame.transform.scale_by(self.changeblesoverlay, 1/5)
         self.map.blit(self.StaticMap, (0, 0))
-        self.map.blit(self.changeblesoverlay, (0, 0))
+        self.map.blit(self.smallchangeblesoverlay, (0,0))
 
     def SetupGame(self):
         self.running = True
         # sets up main verables
         self.camera_X = 0 - self.generator.startloc[0][0] * 5 + self.ScreenLength / 2 - 10
         self.camera_Y = 0 - self.generator.startloc[0][1] * 5 + self.ScreenWidth / 2 - 10
-        self.cameraSpeed = .5
+        self.cameraSpeed = 1
         self.mapsize = self.map.get_size()
         self.newsize = (self.mapsize[0] * 5, self.mapsize[1] * 5)
         self.BIGStaticMap = pygame.transform.scale(self.StaticMap, self.newsize)
@@ -99,12 +106,14 @@ class game(object):
         self.skipmousecheck = False
         self.damagables = pygame.sprite.Group()
         self.damagables.add(self.generator.jars.sprites())
+        self.interactables.add(self.generator.Objectives.sprites())
     def Gameloop(self):
         while self.running:
             self.eventcheck()
             self.Movement()
             self.interactioncheck()
             self.update()
+            self.clock.tick(120)
 
     def eventcheck(self):
         for event in pygame.event.get():
@@ -115,7 +124,7 @@ class game(object):
                 if event.key == pygame.K_m:
                     self.maptriggered = False
                 elif event.key == pygame.K_LSHIFT:
-                    self.cameraSpeed = .5
+                    self.cameraSpeed = 1
             elif event.type == pygame.KEYDOWN:
                 # if user presses M open map
                 if event.key == pygame.K_m:
@@ -128,8 +137,9 @@ class game(object):
                 elif event.key == pygame.K_SPACE:
                     self.player.Attack(self.angle, self.damagables, (self.ScreenLength, self.ScreenWidth))
                 elif event.key == pygame.K_LSHIFT:
-                    print('test')
-                    self.cameraSpeed = 1
+                    self.cameraSpeed = 2
+                elif event.key == pygame.K_f:
+                    self.player.Interact(self.interactables)
 
 
 
@@ -209,14 +219,14 @@ class game(object):
             # print(moveTime)
             # print(playerLocation)
         if keys[pygame.K_q]:
-            self.angle -=1
+            self.angle -=2
         if keys[pygame.K_e]:
-            self.angle += 1
+            self.angle += 2
         if self.playerLocation == (self.ScreenLength / 2 - 25, self.ScreenWidth / 2 - 25):
             moveTime = 1
     def interactioncheck(self):
         for i in self.generator.enemys.sprites():
-            i.CheckSpawn(self.playerLocation)
+            i.CheckSpawn(self.playerLocation, self.matrix, self.map)
 
     def update(self):
         # rotates direction indicator based off angle
