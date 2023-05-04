@@ -1,5 +1,6 @@
 import math
 import random
+import sys
 
 import pygame
 import Functions
@@ -10,46 +11,54 @@ class Enemy(pygame.sprite.Sprite):
         self.health=health
         self.attackdamage=attackdamage
         self.Location = location
-        self.image = pygame.Surface((3, 3))
+        self.smallLocation = (location[0]/5, location[1]/5)
+        self.image = pygame.Surface((15,15))
         self.image.fill((255,0,0))
         self.rect = self.image.get_rect()
-        self.rect.x = location[0]
-        self.rect.y = location[1]
-        self.Bigimage = pygame.Surface((15,15))
-        self.Bigimage.fill((255,0,0))
-        self.bigrect = self.Bigimage.get_rect()
-        self.bigrect.x = location[0] * 5
-        self.bigrect.y = location[1] *5
+        self.rect.x = location[0] * 5
+        self.rect.y = location[1] *5
+
+        self.smallimage = pygame.Surface((3,3))
+        self.smallrect = self.smallimage.get_rect()
+        self.smallrect.x = location[0]
+        self.smallrect.y = location[1]
     def moveToPlayer(self, playerlocation, obstructions):
-        distance = math.sqrt((playerlocation[0]-self.Location[0])**2 + (playerlocation[1]-self.Location[1])**2)
-        if distance < 200:
-            angle = math.atan((playerlocation[1] - self.Location[1]) / (playerlocation[0] - self.Location[0]))
-            collides = self.rect.collidelist(obstructions)
-            if collides:
-                overlapRect = self.rect.clip(collides)
+        self.Location = (self.rect.x, self.rect.y)
+        self.smallLocation = (self.Location[0] / 5, self.Location[1] / 5)
+        self.smallrect.x = self.smallLocation[0]
+        self.smallrect.y = self.smallLocation[1]
+        distance = math.sqrt((playerlocation[0]-(self.smallLocation[0]))**2 + (playerlocation[1]-(self.smallLocation[1]))**2)
+        if distance < 200 and not -5<distance < 5:
+            angle = math.atan2((playerlocation[1] - (self.smallLocation[1])), (playerlocation[0] - (self.smallLocation[0])))
+            collides = self.smallrect.collidelist(obstructions.sprites())
+            if collides != -1:
+                overlapRect = self.smallrect.clip(obstructions.sprites()[collides])
                 if overlapRect.width > overlapRect.height:
-                    if math.cos(math.radians(angle)) > 0:
+                    if math.cos(angle) > 0:
                         self.rect.x += self.speed
                     else:
                         self.rect.x -= self.speed
                 else:
-                    if math.sin(math.radians(angle)) > 0:
-                        self.rect.y += self.speed
-                    else:
+                    if math.sin(angle) > 0:
                         self.rect.y -= self.speed
+                    else:
+                        self.rect.y += self.speed
             else:
-                self.rect.x += self.speed * math.cos(math.radians(angle))
-                self.rect.y += self.speed * math.sin(math.radians(angle))
-                self.Location = self.rect.x
-                self.Location = self.rect.y
-
+                # if angle < 0:
+                #     self.rect.x -= self.speed * math.cos(angle)
+                #     self.rect.y -= self.speed * math.sin(angle)
+                # else:
+                self.rect.x += self.speed * math.cos(angle)
+                self.rect.y += self.speed * math.sin(angle)
     def Update(self, playerlocation, obstructions):
         self.moveToPlayer(playerlocation,obstructions)
-        #draw map stuff
+    def Attack(self):
+        pass
+
 
 class basicenemy(Enemy):
     def __init__(self, location):
-        super(basicenemy, self).__init__(1,1,1, location)
+        super(basicenemy, self).__init__(1,1.5,1, location)
         self.weapon=1
         self.armour=1
 class Tile():
@@ -63,13 +72,17 @@ class EnemySpawn(pygame.sprite.Sprite):
         super(EnemySpawn, self).__init__()
         self.NumberEnemys= NumberEnemys
         self.Location = Location
-    def Spawn(self, playerlocation, matrix, map):
-        print("spawned")
+    def Spawn(self):
+        enemys = pygame.sprite.Group()
+        for i in range(self.NumberEnemys):
+            enemys.add(basicenemy((random.randrange(self.Location[0]-10, self.Location[0]+20),random.randrange(self.Location[1]-10, self.Location[1]+20))))
         self.kill()
-    def CheckSpawn(self, playerlocation, matrix, map):
+        return enemys
+    def CheckSpawn(self, playerlocation):
         distance = math.sqrt((playerlocation[0]-self.Location[0])**2 + (playerlocation[1]-self.Location[1])**2)
-        if distance < 5:
-            self.Spawn(playerlocation, matrix, map)
+        if distance < 50:
+            enemys = self.Spawn()
+            return enemys
 class StartLoc():
     def __init__(self, Location):
         self.Location = Location

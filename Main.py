@@ -24,13 +24,17 @@ class game(object):
         self.ScreenWidth = 1030
 
         #sets up the generator class with tile size
-        self.generator = ProceduralGenerator(int(self.ScreenLength / 10), int(self.ScreenWidth / 10))
+        self.generator = ProceduralGenerator(int(self.ScreenLength / 10), int(self.ScreenWidth / 10), 10)
 
         # Set up the drawing window
         self.screen = pygame.display.set_mode([self.ScreenLength, self.ScreenWidth])
         self.StaticMap = pygame.Surface((self.ScreenLength, self.ScreenWidth))
         self.changeblesoverlay = pygame.Surface((self.ScreenLength*5, self.ScreenWidth*5))
+        self.enemysOverlay = pygame.Surface((self.ScreenLength*5, self.ScreenWidth*5))
         self.map = pygame.Surface((self.ScreenLength, self.ScreenWidth))
+
+        self.enemys = pygame.sprite.Group()
+
 
         pygame.display.set_caption('The Lost Dungeon')
 
@@ -75,7 +79,7 @@ class game(object):
         self.Gameloop()
     def Generatelevel(self):
         # generates map
-        self.generator.Generate(5, 10, 30, 5, True, 50, 10, 2, None, 1, 2, 5, 25)
+        self.generator.Generate(5, 10, 30, 5, True, 50, 10, 2, None, 10, 2, 5, 25)
         self.matrix = self.generator.matrix
         # inits player
         self.player = Player((self.generator.startloc[0][0], self.generator.startloc[0][1]), self)
@@ -91,7 +95,7 @@ class game(object):
         # sets up main verables
         self.camera_X = 0 - self.generator.startloc[0][0] * 5 + self.ScreenLength / 2 - 10
         self.camera_Y = 0 - self.generator.startloc[0][1] * 5 + self.ScreenWidth / 2 - 10
-        self.cameraSpeed = 1
+        self.cameraSpeed = 1.5
         self.mapsize = self.map.get_size()
         self.newsize = (self.mapsize[0] * 5, self.mapsize[1] * 5)
         self.BIGStaticMap = pygame.transform.scale(self.StaticMap, self.newsize)
@@ -112,6 +116,7 @@ class game(object):
             self.eventcheck()
             self.Movement()
             self.interactioncheck()
+            self.UpdateHostiles()
             self.update()
             self.clock.tick(120)
 
@@ -124,7 +129,7 @@ class game(object):
                 if event.key == pygame.K_m:
                     self.maptriggered = False
                 elif event.key == pygame.K_LSHIFT:
-                    self.cameraSpeed = 1
+                    self.cameraSpeed = 1.5
             elif event.type == pygame.KEYDOWN:
                 # if user presses M open map
                 if event.key == pygame.K_m:
@@ -137,7 +142,7 @@ class game(object):
                 elif event.key == pygame.K_SPACE:
                     self.player.Attack(self.angle, self.damagables, (self.ScreenLength, self.ScreenWidth))
                 elif event.key == pygame.K_LSHIFT:
-                    self.cameraSpeed = 2
+                    self.cameraSpeed = 3
                 elif event.key == pygame.K_f:
                     self.player.Interact(self.interactables)
 
@@ -226,7 +231,18 @@ class game(object):
             moveTime = 1
     def interactioncheck(self):
         for i in self.generator.enemys.sprites():
-            i.CheckSpawn(self.playerLocation, self.matrix, self.map)
+            enemys = i.CheckSpawn(self.playerLocation)
+            if enemys:
+                self.enemys.add(enemys)
+
+    def UpdateHostiles(self):
+        for i in self.enemys.sprites():
+            i.Update(self.playerLocation, self.obstructions)
+        self.enemysOverlay.fill((0,0,0))
+        self.enemys.draw(self.enemysOverlay)
+        self.enemysOverlay.set_colorkey((0,0,0))
+
+
 
     def update(self):
         # rotates direction indicator based off angle
@@ -238,6 +254,7 @@ class game(object):
         # if map is closed draw game window to screen
         if not self.mapopen:
             self.screen.blit(self.BIGmap, (self.camera_X, self.camera_Y))
+            self.screen.blit(self.enemysOverlay, (self.camera_X, self.camera_Y))
             self.screen.blit(self.player.image, (self.ScreenLength / 2 - 10, self.ScreenWidth / 2 - 10))
             self.screen.blit(direction_indicator_rotated, rect)
 
