@@ -323,9 +323,9 @@ class ProceduralGenerator():
         self.startloc = None
         self.startRoom= None
         self.enemys = []
-        self.Treasure = []
-        self.Jar = []
-        self.Objectives = []
+        self.Treasure = pygame.sprite.Group()
+        self.Jar = pygame.sprite.Group()
+        self.Objectives = pygame.sprite.Group()
         self.diffucultyincrese = 2
         self.Objectivesnum = 2
         self.loot = 0

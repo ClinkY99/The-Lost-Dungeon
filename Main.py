@@ -72,7 +72,9 @@ class game(object):
         self.newsize = None
         self.smallchangeblesoverlay = None
         self.matrix = None
+        self.objectivesRemaining = None
         self.interactables = pygame.sprite.Group()
+        self.Objectives = pygame.sprite.Group()
 
 
         #init
@@ -112,7 +114,9 @@ class game(object):
         self.skipmousecheck = False
         self.damagables = pygame.sprite.Group()
         self.damagables.add(self.generator.jars.sprites())
-        self.interactables.add(self.generator.Objectives.sprites())
+        self.interactables.add(self.generator.Treasure.sprites(), self.generator.Objectives.sprites())
+        self.Objectives.add(self.generator.Objectives.sprites())
+        self.objectivesRemaining = self.generator.Objectivesnum
     def Gameloop(self):
         while self.running:
             self.eventcheck()
@@ -149,8 +153,11 @@ class game(object):
                     self.cameraSpeed = 3
                 elif event.key == pygame.K_e:
                     self.player.Interact(self.interactables)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    self.player.Attack(self.angle, self.damagables, (self.ScreenLength, self.ScreenWidth))
             mouse_x, mouse_y = pygame.mouse.get_pos()
-            self.angle = math.degrees(math.atan2((mouse_y - self.ScreenWidth / 2), (mouse_x - self.ScreenLength / 2))) +130
+            self.angle = math.degrees(math.atan2((mouse_y - self.ScreenWidth / 2), (mouse_x - self.ScreenLength / 2))) +135
 
             # # if player moves the mouse calculate new angle for the direction indicator
             # elif event.type == pygame.MOUSEMOTION and not self.skipmousecheck:
@@ -237,8 +244,16 @@ class game(object):
         # Fill the background with white
         self.screen.fill((0, 0, 0))
         # if map is closed draw game window to screen
+        for i in self.interactables.sprites():
+            if i.Update():
+                self.objectivesRemaining -= 1
+                if self.objectivesRemaining == 0:
+                    print('finished')
+        self.Objectives.draw(self.changeblesoverlay)
+
         if not self.mapopen:
-            self.screen.blit(self.BIGmap, (self.camera_X, self.camera_Y))
+            self.screen.blit(self.BIGStaticMap, (self.camera_X, self.camera_Y))
+            self.screen.blit(self.changeblesoverlay, (self.camera_X, self.camera_Y))
             self.screen.blit(self.enemysOverlay, (self.camera_X, self.camera_Y))
             self.screen.blit(self.player.image, (self.ScreenLength / 2 - 10, self.ScreenWidth / 2 - 10))
             self.screen.blit(direction_indicator_rotated, rect)
@@ -253,6 +268,9 @@ class game(object):
         # updates playerlocation
         self.player.rect.x = self.playerLocation[0]
         self.player.rect.y = self.playerLocation[1]
+        self.player.bigrect.x = self.playerLocation[0]*5
+        self.player.bigrect.y = self.playerLocation[1]*5
+
         # Flip the display
         pygame.display.flip()
     def UpdateChangables(self):

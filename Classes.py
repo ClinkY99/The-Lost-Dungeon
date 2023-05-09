@@ -173,25 +173,104 @@ class Objective(pygame.sprite.Sprite):
         super(Objective, self).__init__()
         self.Location = (location[0] * 10, location[1] * 10)
         self.NumEnemys = NumEnemys
-        self.image = pygame.transform.scale_by(pygame.image.load('./Art/Interactables/Objectives/Objective Unactive.png').convert(), 5)
+        self.Forms = [pygame.transform.scale_by(pygame.image.load('./Art/Interactables/Objectives/Objective Unactive.png'), 5)]
+        self.image = self.Forms[0]
         self.rect = self.image.get_rect()
-        self.rect.x = self.Location[0] * 5
-        self.rect.y = self.Location[1] * 5
-        self.Forms = [self.image]
-        for i in range(1,2):
+        self.rect.x = self.Location[0] *5
+        self.rect.y = self.Location[1] *5
+        self.count = 0
+        self.player = None
+        self.complete = False
+        self.completeimage = pygame.transform.scale_by(pygame.image.load('./Art/Interactables/Objectives/Objective Complete.png'), 5)
+        for i in range(1,13):
             self.Forms.append(pygame.transform.scale_by(pygame.image.load(f'./Art/Interactables/Objectives/Objective Stage-{i}.png'), 5))
     def Complete(self):
-        pass
-    def Interact(self):
+        self.complete = True
+        self.Forms = None
+        return True
+    def Interact(self, player):
+        self.player = player
         self.Activate()
-        print('test')
     def Activate(self):
-        pass
-        #code for fading between images to add "animation"
-        #Figure it out future kieran.... :)
-        # def BlendSurface(image, pos, alpha):
-        #     image.set_alpha(min(1.0, alpha) * 255)
-        #     screen.blit(image, pos)
+        if self.count <= 300:
+            self.Forms[1].set_alpha(self.count/10)
+            self.image.blit(self.Forms[1], (0,0))
+        elif self.count <=400:
+            self.Forms[2].set_alpha((self.count-300)/8)
+            self.image.blit(self.Forms[2], (0, 0))
+        elif self.count <= 500:
+            self.Forms[3].set_alpha((self.count - 400) / 8)
+            self.image.blit(self.Forms[3], (0, 0))
+        elif self.count == 600:
+            self.image.blit(self.Forms[4], (0, 0))
+        elif self.count == 700:
+            self.image.blit(self.Forms[5], (0, 0))
+        elif self.count == 800:
+            self.image.blit(self.Forms[6], (0, 0))
+        elif self.count == 900:
+            self.image.blit(self.Forms[7], (0, 0))
+        elif self.count == 1000:
+            self.image.blit(self.Forms[8], (0, 0))
+        elif 1100<=self.count <= 1200:
+            self.Forms[9].set_alpha((self.count - 1100) / 8)
+            self.image.blit(self.Forms[9], (0, 0))
+        elif 1200 < self.count <= 1250:
+            self.image.fill((0,0,0))
+            self.image.blit(self.Forms[8], (0,0))
+            self.Forms[9].set_alpha((1450 - self.count))
+            self.image.blit(self.Forms[9], (0, 0))
+        elif 1250 <= self.count <= 1300:
+            self.Forms[9].set_alpha((self.count - 1200) / 8)
+            self.image.blit(self.Forms[9], (0, 0))
+        elif 1300 < self.count <= 1350:
+            self.image.fill((0, 0, 0))
+            self.image.blit(self.Forms[8], (0,0))
+            self.Forms[9].set_alpha((1550 - self.count))
+            self.image.blit(self.Forms[9], (0, 0))
+        elif 1350 <= self.count <= 1400:
+            self.Forms[9].set_alpha((self.count - 1300) / 8)
+            self.image.blit(self.Forms[9], (0, 0))
+        elif 1400 < self.count <= 1450:
+            self.image.fill((0, 0, 0))
+            self.image.blit(self.Forms[8], (0,0))
+            self.Forms[9].set_alpha((1650 - self.count))
+            self.image.blit(self.Forms[9], (0, 0))
+        elif 1450 <= self.count <= 1500:
+            self.Forms[9].set_alpha((self.count - 1400) / 8)
+            self.image.blit(self.Forms[9], (0, 0))
+        elif 1500 < self.count <= 1550:
+            self.image.fill((0, 0, 0))
+            self.image.blit(self.Forms[8], (0,0))
+            self.Forms[9].set_alpha((1750 - self.count))
+            self.image.blit(self.Forms[9], (0, 0))
+        elif 1550 <= self.count <= 1650:
+            self.Forms[9].set_alpha((self.count - 1500) / 8)
+            self.image.blit(self.Forms[9], (0, 0))
+        elif 1650 <= self.count <= 1850:
+            self.Forms[10].set_alpha((self.count - 1650) / 10)
+            self.image.blit(self.Forms[10], (0, 0))
+        elif 1900 <= self.count <= 2000:
+            self.Forms[11].set_alpha((self.count - 1900) / 8)
+            self.image.blit(self.Forms[11], (0, 0))
+        elif 2200 <= self.count <=2400:
+            self.Forms[12].set_alpha((self.count - 2200) / 10)
+            self.image.blit(self.Forms[12], (0, 0))
+        elif 2500 <= self.count < 2600:
+            self.completeimage.set_alpha((self.count -2500)/10)
+            self.image.blit(self.completeimage, (0, 0))
+        elif self.count == 2600:
+            return self.Complete()
+        if self.player.bigrect.colliderect(self.rect):
+            self.count+= 1
+        elif not self.complete:
+            self.count = 0
+            self.image.fill((0,0,0))
+            self.image.blit(pygame.transform.scale_by(pygame.image.load('./Art/Interactables/Objectives/Objective Unactive.png'), 5), (0,0))
+    def Update(self):
+        if self.count > 0:
+            complete = self.Activate()
+            if complete:
+                return True
 class Treasure(POI):
     def __init__(self, location, direction, NumEnemys, contains):
         super(Treasure, self).__init__(location, NumEnemys=NumEnemys, EnemySpawn= True)
@@ -256,6 +335,9 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.tinyimage.get_rect()
         self.rect.x = startloc[0]
         self.rect.y = startloc[1]
+        self.bigrect = self.image.get_rect()
+        self.bigrect.x = self.rect.x *5
+        self.bigrect.y = self.rect.y *5
         self.speed = 2
         self.obstruction = None
         self.weilded = basicsword()
@@ -265,8 +347,8 @@ class Player(pygame.sprite.Sprite):
         pass
     def Interact(self, interactables):
         for i in interactables.sprites():
-            if self.rect.colliderect(i):
-                i.Interact()
+            if self.bigrect.colliderect(i):
+                i.Interact(self)
     def Attack(self, angle, damagables, size):
         self.weilded.attack(angle, self.rect.center, damagables, size, self.level)
     def damage(self, amount):
