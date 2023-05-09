@@ -320,3 +320,21 @@ class Player(pygame.sprite.Sprite):
                 camera_X -= speed
                 playerLocation[0] += speed/5
         return [camera_X,camera_Y]
+
+class Mouse(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Mouse, self).__init__()
+        self.InRange = pygame.image.load('./Art/Mouse/Mouse InRange.png').convert()
+        self.InRange.set_colorkey((0,0,0))
+        self.OutRange = pygame.image.load('./Art/Mouse/Mouse OutRange.png').convert()
+        self.OutRange.set_colorkey((0,0,0))
+        self.image = self.OutRange
+        self.rect = self.image.get_rect()
+        self.rect.center = pygame.mouse.get_pos()
+    def Update(self, range, centerofscreen):
+            distance = math.sqrt((centerofscreen[0]/5 - self.rect.x/5) ** 2 + (centerofscreen[1]/5 - self.rect.y/5) ** 2)
+            self.rect.center = pygame.mouse.get_pos()
+            if distance > range:
+                self.image = self.OutRange
+            else:
+                self.image = self.InRange

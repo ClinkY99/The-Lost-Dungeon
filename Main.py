@@ -32,6 +32,8 @@ class game(object):
         self.changeblesoverlay = pygame.Surface((self.ScreenLength*5, self.ScreenWidth*5))
         self.enemysOverlay = pygame.Surface((self.ScreenLength*5, self.ScreenWidth*5))
         self.map = pygame.Surface((self.ScreenLength, self.ScreenWidth))
+        self.mouse = Classes.Mouse()
+
 
         self.enemys = pygame.sprite.Group()
 
@@ -145,10 +147,10 @@ class game(object):
                     self.player.Attack(self.angle, self.damagables, (self.ScreenLength, self.ScreenWidth))
                 elif event.key == pygame.K_LSHIFT:
                     self.cameraSpeed = 3
-                elif event.key == pygame.K_f:
+                elif event.key == pygame.K_e:
                     self.player.Interact(self.interactables)
-
-
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            self.angle = math.degrees(math.atan2((mouse_y - self.ScreenWidth / 2), (mouse_x - self.ScreenLength / 2))) +130
 
             # # if player moves the mouse calculate new angle for the direction indicator
             # elif event.type == pygame.MOUSEMOTION and not self.skipmousecheck:
@@ -165,10 +167,8 @@ class game(object):
 
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             if not self.player.Checkcollisions(self.obstructions):
-                self.camera_X += self.cameraSpeed * math.cos(math.radians(self.angle -45))
-                self.camera_Y += self.cameraSpeed * math.sin(math.radians(self.angle -45))
-                self.playerLocation[0] += self.cameraSpeed * math.cos(math.radians(self.angle - 225)) / 5
-                self.playerLocation[1] += self.cameraSpeed * math.sin(math.radians(self.angle - 225)) / 5
+                self.camera_X += self.cameraSpeed
+                self.playerLocation[0] -= self.cameraSpeed/5
             else:
                 movement = self.player.MoveFromWall(self.cameraSpeed, self.camera_X, self.camera_Y, self.playerLocation)
                 self.camera_X = movement[0]
@@ -177,10 +177,8 @@ class game(object):
             # moveTime +=1
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             if not self.player.Checkcollisions(self.obstructions):
-                self.camera_X += self.cameraSpeed * math.cos(math.radians(self.angle + 135))
-                self.camera_Y += self.cameraSpeed * math.sin(math.radians(self.angle + 135))
-                self.playerLocation[0] += self.cameraSpeed * math.cos(math.radians(self.angle - 45)) / 5
-                self.playerLocation[1] += self.cameraSpeed * math.sin(math.radians(self.angle - 45)) / 5
+                self.camera_X -= self.cameraSpeed
+                self.playerLocation[0] += self.cameraSpeed/5
             else:
                 movement = self.player.MoveFromWall(self.cameraSpeed, self.camera_X, self.camera_Y, self.playerLocation)
                 self.camera_X = movement[0]
@@ -189,21 +187,11 @@ class game(object):
             # playerLocation = player.MoveRight(moveTime, (ScreenLength, ScreenWidth))
             # moveTime += 1
         if keys[pygame.K_UP] or keys[pygame.K_w]:
-            # if not self.player.Checkcollisions(self.obstructions):
-            #     self.camera_Y += self.cameraSpeed
-            #     self.playerLocation[1] -= self.cameraSpeed / 5
-            # else:
-            #     movement = self.player.MoveFromWall(self.cameraSpeed, self.camera_X, self.camera_Y, self.playerLocation)
-            #     self.camera_X = movement[0]
-            #     self.camera_Y = movement[1]
-
             # playerLocation = player.MoveUp(moveTime, (ScreenLength, ScreenWidth))
             # moveTime += 1
             if not self.player.Checkcollisions(self.obstructions):
-                self.camera_X += self.cameraSpeed * math.cos(math.radians(self.angle+45))
-                self.camera_Y += self.cameraSpeed * math.sin(math.radians(self.angle+45))
-                self.playerLocation[0] += self.cameraSpeed * math.cos(math.radians(self.angle-135))/5
-                self.playerLocation[1] += self.cameraSpeed * math.sin(math.radians(self.angle-135))/5
+                self.camera_Y += self.cameraSpeed
+                self.playerLocation[1] -= self.cameraSpeed/5
             else:
                 movement = self.player.MoveFromWall(self.cameraSpeed, self.camera_X, self.camera_Y, self.playerLocation)
                 self.camera_X = movement[0]
@@ -212,10 +200,8 @@ class game(object):
 
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             if not self.player.Checkcollisions(self.obstructions):
-                self.camera_X += self.cameraSpeed * math.cos(math.radians(self.angle + 225))
-                self.camera_Y += self.cameraSpeed * math.sin(math.radians(self.angle + 225))
-                self.playerLocation[0] += self.cameraSpeed * math.cos(math.radians(self.angle - 315)) / 5
-                self.playerLocation[1] += self.cameraSpeed * math.sin(math.radians(self.angle - 315)) / 5
+                self.camera_Y -= self.cameraSpeed
+                self.playerLocation[1] += self.cameraSpeed/5
             else:
                 self.movement = self.player.MoveFromWall(self.cameraSpeed, self.camera_X, self.camera_Y, self.playerLocation)
                 self.camera_X = self.movement[0]
@@ -225,10 +211,6 @@ class game(object):
             # moveTime += 1
             # print(moveTime)
             # print(playerLocation)
-        if keys[pygame.K_q]:
-            self.angle -=2
-        if keys[pygame.K_e]:
-            self.angle += 2
         if self.playerLocation == (self.ScreenLength / 2 - 25, self.ScreenWidth / 2 - 25):
             moveTime = 1
     def interactioncheck(self):
@@ -260,6 +242,8 @@ class game(object):
             self.screen.blit(self.enemysOverlay, (self.camera_X, self.camera_Y))
             self.screen.blit(self.player.image, (self.ScreenLength / 2 - 10, self.ScreenWidth / 2 - 10))
             self.screen.blit(direction_indicator_rotated, rect)
+            self.mouse.Update(self.player.weilded.range,(self.ScreenLength / 2, self.ScreenWidth / 2))
+            self.screen.blit(self.mouse.image, self.mouse.rect)
 
         # otherwise draw map
         else:
@@ -271,13 +255,6 @@ class game(object):
         self.player.rect.y = self.playerLocation[1]
         # Flip the display
         pygame.display.flip()
-        # if mouse leaves screen teleport it back to center
-        mouse_x, mouse_y = pygame.mouse.get_pos()
-        if mouse_x < 100 or mouse_x > self.ScreenLength - 100 or mouse_y < 100 or mouse_y > self.ScreenWidth - 100:
-            skipmousecheck = True
-            pygame.mouse.set_pos(self.ScreenLength / 2, self.ScreenWidth / 2)
-        else:
-            skipmousecheck = False
     def UpdateChangables(self):
         print('test')
         self.changeblesoverlay.fill((0,0,0))
