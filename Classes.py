@@ -28,21 +28,76 @@ class Enemy(pygame.sprite.Sprite):
         self.smallrect.x = self.smallLocation[0]
         self.smallrect.y = self.smallLocation[1]
         distance = math.sqrt((playerlocation[0]-(self.smallLocation[0]))**2 + (playerlocation[1]-(self.smallLocation[1]))**2)
-        if distance < 200 and not -5<distance < 5:
+        if distance < 150 and not -5<distance < 5:
             angle = math.atan2((playerlocation[1] - (self.smallLocation[1])), (playerlocation[0] - (self.smallLocation[0])))
-            collides = self.smallrect.collidelist(obstructions.sprites())
-            if collides != -1:
-                overlapRect = self.smallrect.clip(obstructions.sprites()[collides])
+            collides = self.smallrect.collidelistall(obstructions.sprites())
+            if collides != []:
+                overlapRect = self.smallrect.clip(obstructions.sprites()[collides[0]])
+                collidetester = collides[0]
+                panic = False
+                if overlapRect.width == overlapRect.height:
+                    print('i hate bug fixing')
+                    if len(collides) == 1:
+                        panic = True
+                    else:
+                        overlapRect = self.smallrect.clip(obstructions.sprites()[collides[1]])
+                        collidetester = collides[1]
+                        if overlapRect.width == overlapRect.height:
+                            panic = True
+                print(overlapRect.width, overlapRect.height)
+                print(panic)
                 if overlapRect.width > overlapRect.height:
-                    if math.cos(angle) > 0:
-                        self.rect.x += self.speed
+                    print('wtf')
+                    if obstructions.sprites()[collides[0]].rect.collidepoint(self.Location[0]/5,self.Location[1]/5) or obstructions.sprites()[collidetester].rect.collidepoint(self.Location[0]/5,self.Location[1]/5):
+                        if math.sin(angle) < 0:
+                            if math.cos(angle) > 0:
+                                self.rect.x += self.speed
+                            else:
+                                self.rect.x -= self.speed
+                        else:
+                            self.rect.x += self.speed * math.cos(angle)
+                            self.rect.y += self.speed * math.sin(angle)
+                        if overlapRect.height > 1:
+                            self.rect.y += self.speed*3
+
                     else:
-                        self.rect.x -= self.speed
+                        if math.sin(angle) > 0:
+                            if math.cos(angle) > 0:
+                                self.rect.x += self.speed
+                            else:
+                                self.rect.x -= self.speed
+                        else:
+                            self.rect.x += self.speed * math.cos(angle)
+                            self.rect.y += self.speed * math.sin(angle)
+                        if overlapRect.height > 1:
+                            self.rect.y -= self.speed*3
                 else:
-                    if math.sin(angle) > 0:
-                        self.rect.y -= self.speed
+                    if obstructions.sprites()[collides[0]].rect.collidepoint(self.Location[0]/5,self.Location[1]/5) or obstructions.sprites()[collidetester].rect.collidepoint(self.Location[0]/5,self.Location[1]/5):
+                        print('test 1')
+                        if math.cos(angle) < 0:
+                            if math.sin(angle) > 0:
+                                self.rect.y += self.speed
+                            else:
+                                self.rect.y -= self.speed
+                        else:
+                            self.rect.x += self.speed * math.cos(angle)
+                            self.rect.y += self.speed * math.sin(angle)
+                        if overlapRect.width > 1:
+                            self.rect.x += self.speed*3
                     else:
-                        self.rect.y += self.speed
+                        if math.cos(angle) > 0:
+                            print('test 2')
+                            if math.sin(angle) > 0:
+                                self.rect.y += self.speed
+                            else:
+                                self.rect.y -= self.speed
+                        else:
+                            self.rect.x += self.speed * math.cos(angle)
+                            self.rect.y += self.speed * math.sin(angle)
+                        if overlapRect.height > 1:
+                            self.rect.x -= self.speed*3
+                print('break')
+
             else:
                 # if angle < 0:
                 #     self.rect.x -= self.speed * math.cos(angle)
@@ -54,6 +109,8 @@ class Enemy(pygame.sprite.Sprite):
         self.moveToPlayer(playerlocation,obstructions)
     def Attack(self):
         pass
+    def Damage(self):
+
 
 
 class basicenemy(Enemy):
@@ -80,7 +137,7 @@ class EnemySpawn(pygame.sprite.Sprite):
         return enemys
     def CheckSpawn(self, playerlocation):
         distance = math.sqrt((playerlocation[0]-self.Location[0])**2 + (playerlocation[1]-self.Location[1])**2)
-        if distance < 50:
+        if distance < 100:
             enemys = self.Spawn()
             return enemys
 class StartLoc():

@@ -24,7 +24,7 @@ class game(object):
         self.ScreenWidth = 1030
 
         #sets up the generator class with tile size
-        self.generator = ProceduralGenerator(int(self.ScreenLength / 10), int(self.ScreenWidth / 10), 10)
+        self.generator = ProceduralGenerator(int(self.ScreenLength / 10), int(self.ScreenWidth / 10),10)
 
         # Set up the drawing window
         self.screen = pygame.display.set_mode([self.ScreenLength, self.ScreenWidth])
@@ -79,7 +79,7 @@ class game(object):
         self.Gameloop()
     def Generatelevel(self):
         # generates map
-        self.generator.Generate(5, 10, 30, 5, True, 50, 10, 2, None, 10, 2, 5, 25)
+        self.generator.Generate(5, 10, 30, 5, True, 50, 10, 2, None, 50, 2, 5, 25)
         self.matrix = self.generator.matrix
         # inits player
         self.player = Player((self.generator.startloc[0][0], self.generator.startloc[0][1]), self)
@@ -138,6 +138,8 @@ class game(object):
                     elif not self.mapopen:
                         self.mapopen = True
                 elif event.key == pygame.K_ESCAPE:
+                    print('ENEMIES')
+                    print(len(self.enemys.sprites()))
                     self.running = False
                 elif event.key == pygame.K_SPACE:
                     self.player.Attack(self.angle, self.damagables, (self.ScreenLength, self.ScreenWidth))
