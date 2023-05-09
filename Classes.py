@@ -17,22 +17,24 @@ class Enemy(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = location[0] * 5
         self.rect.y = location[1] *5
-
         self.smallimage = pygame.Surface((3,3))
-        self.smallrect = self.smallimage.get_rect()
-        self.smallrect.x = location[0]
-        self.smallrect.y = location[1]
+        self.overlaprect = self.smallimage.get_rect()
+        self.overlaprect.x = location[0]
+        self.overlaprect.y = location[1]
+        self.weapon = basicsword()
+        self.weapon = 0
+        self.weapon = basicsword()
     def moveToPlayer(self, playerlocation, obstructions):
         self.Location = (self.rect.x, self.rect.y)
         self.smallLocation = (self.Location[0] / 5, self.Location[1] / 5)
-        self.smallrect.x = self.smallLocation[0]
-        self.smallrect.y = self.smallLocation[1]
+        self.overlaprect.x = self.smallLocation[0]
+        self.overlaprect.y = self.smallLocation[1]
         distance = math.sqrt((playerlocation[0]-(self.smallLocation[0]))**2 + (playerlocation[1]-(self.smallLocation[1]))**2)
         if distance < 150 and not -5<distance < 5:
             angle = math.atan2((playerlocation[1] - (self.smallLocation[1])), (playerlocation[0] - (self.smallLocation[0])))
-            collides = self.smallrect.collidelistall(obstructions.sprites())
+            collides = self.overlaprect.collidelistall(obstructions.sprites())
             if collides != []:
-                overlapRect = self.smallrect.clip(obstructions.sprites()[collides[0]])
+                overlapRect = self.overlaprect.clip(obstructions.sprites()[collides[0]])
                 collidetester = collides[0]
                 panic = False
                 if overlapRect.width == overlapRect.height:
@@ -40,7 +42,7 @@ class Enemy(pygame.sprite.Sprite):
                     if len(collides) == 1:
                         panic = True
                     else:
-                        overlapRect = self.smallrect.clip(obstructions.sprites()[collides[1]])
+                        overlapRect = self.overlaprect.clip(obstructions.sprites()[collides[1]])
                         collidetester = collides[1]
                         if overlapRect.width == overlapRect.height:
                             panic = True
@@ -105,18 +107,29 @@ class Enemy(pygame.sprite.Sprite):
                 # else:
                 self.rect.x += self.speed * math.cos(angle)
                 self.rect.y += self.speed * math.sin(angle)
-    def Update(self, playerlocation, obstructions):
+    def Update(self, playerlocation, obstructions, player):
         self.moveToPlayer(playerlocation,obstructions)
-    def Attack(self):
-        pass
-    def Damage(self):
+        self.Attack(player, playerlocation)
+    def Attack(self, player, playerlocation):
+        distance = math.sqrt((playerlocation[0]-(self.smallLocation[0]))**2 + (playerlocation[1]-(self.smallLocation[1]))**2)
+        if distance <= self.weapon.range:
+            if random.randrange(1,50) == 1:
+                if random.randrange(1,20) >= player.armourlevel:
+                    player.damage(self.weapon.damage)
+
+
+
+    def damage(self, damage, level):
+        self.health -= damage
+        if self.health < 0:
+            self.kill()
 
 
 
 class basicenemy(Enemy):
     def __init__(self, location):
         super(basicenemy, self).__init__(1,1.5,1, location)
-        self.weapon=1
+        self.weapon=basicsword()
         self.armour=1
 class Tile():
     def __init__(self):
@@ -195,6 +208,7 @@ class Jar(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = location[0]*10
         self.rect.y = location[1]*10
+        self.overlaprect = self.rect
         self.bigself = BigJar(location)
     def damage(self, damage, level):
         self.kill()
@@ -246,6 +260,7 @@ class Player(pygame.sprite.Sprite):
         self.obstruction = None
         self.weilded = basicsword()
         self.level = level
+        self.armourlevel = 0
     def Inventory(self):
         pass
     def Interact(self, interactables):
@@ -254,6 +269,8 @@ class Player(pygame.sprite.Sprite):
                 i.Interact()
     def Attack(self, angle, damagables, size):
         self.weilded.attack(angle, self.rect.center, damagables, size, self.level)
+    def damage(self, amount):
+        print('hit')
     def Health(self):
         pass
     # def MoveUp(self, moveTime, screensize: tuple):

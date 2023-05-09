@@ -97,17 +97,13 @@ def WallCheck(generator, coord):
     return walls
 
 
-def OverlapLine(distance, angle, startpoint, damgables,size):
-
+def OverlapLine(distance, angle, startpoint, damgables, size):
     angle = math.radians(angle-135)
     endpoint = (startpoint[0] + (distance * math.cos(angle)), startpoint[1] + (distance * math.sin(angle)))
     line = pygame.draw.line(pygame.Surface(size), (0,255,0), startpoint, endpoint)
     overlaps = []
-    for i in [line.collidelist(damgables.sprites())]:
-        if i != -1:
-            sprite = damgables.sprites()[i]
-            if sprite.rect.clipline(startpoint, endpoint):
-                overlaps.append(sprite)
-
-
+    for i in damgables.sprites():
+        if line.colliderect(i.overlaprect):
+            if i.overlaprect.clipline(startpoint, endpoint):
+                overlaps.append(i)
     return overlaps

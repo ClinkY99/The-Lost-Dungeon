@@ -382,10 +382,7 @@ class ProceduralGenerator():
             for y in range(len(self.map[x])):
                 tile = self.map[x][y]
                 if tile.Active:
-                    if tile.enemys:
-                        map.blit(enemytile, (x * 10, y * 10))
-                    else:
-                        map.blit(floortile, (x * 10, y * 10))
+                    map.blit(floortile, (x * 10, y * 10))
                 for i in tile.wall:
                     if i:
                         map.blit(i.image, i.rect)

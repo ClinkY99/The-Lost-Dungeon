@@ -79,7 +79,7 @@ class game(object):
         self.Gameloop()
     def Generatelevel(self):
         # generates map
-        self.generator.Generate(5, 10, 30, 5, True, 50, 10, 2, None, 50, 2, 5, 25)
+        self.generator.Generate(5, 10, 30, 5, True, 50, 10, 2, None, 1, 2, 5, 25)
         self.matrix = self.generator.matrix
         # inits player
         self.player = Player((self.generator.startloc[0][0], self.generator.startloc[0][1]), self)
@@ -236,10 +236,11 @@ class game(object):
             enemys = i.CheckSpawn(self.playerLocation)
             if enemys:
                 self.enemys.add(enemys)
+                self.damagables.add(self.enemys)
 
     def UpdateHostiles(self):
         for i in self.enemys.sprites():
-            i.Update(self.playerLocation, self.obstructions)
+            i.Update(self.playerLocation, self.obstructions, self.player)
         self.enemysOverlay.fill((0,0,0))
         self.enemys.draw(self.enemysOverlay)
         self.enemysOverlay.set_colorkey((0,0,0))
