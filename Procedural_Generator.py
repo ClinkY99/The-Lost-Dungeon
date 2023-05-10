@@ -265,7 +265,6 @@ def enemySpawns(diffuculty, generator):
     locationstospawnenemys = list(generator.rooms)
     #removes start room
     locationstospawnenemys.remove(generator.startRoom)
-    locationstospawnenemys.remove(generator.endpoint.room)
     #loops through a random number based of the diffuculty
     enemys = pygame.sprite.Group()
     for i in range(0, random.randrange(diffuculty*generator.diffucultyincrese*2, diffuculty*generator.diffucultyincrese*5)):
