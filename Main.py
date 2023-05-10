@@ -1,3 +1,5 @@
+import sys
+
 import pygame
 from pygame import mixer
 import math
@@ -24,7 +26,7 @@ class game(object):
         self.ScreenWidth = 1030
 
         #sets up the generator class with tile size
-        self.generator = ProceduralGenerator(int(self.ScreenLength / 10), int(self.ScreenWidth / 10),10)
+        self.generator = ProceduralGenerator(int(self.ScreenLength / 10), int(self.ScreenWidth / 10))
 
         # Set up the drawing window
         self.screen = pygame.display.set_mode([self.ScreenLength, self.ScreenWidth])
@@ -83,7 +85,7 @@ class game(object):
         self.Gameloop()
     def Generatelevel(self):
         # generates map
-        self.generator.Generate(5, 10, 30, 5, True, 50, 10, 2, None, 1, 2, 5, 25)
+        self.generator.Generate(5, 10, 30, 5, True, 50, 10, 2, None, 3, 2, 5, 25)
         self.matrix = self.generator.matrix
         # inits player
         self.player = Player((self.generator.startloc[0][0], self.generator.startloc[0][1]), self)
@@ -114,7 +116,7 @@ class game(object):
         self.skipmousecheck = False
         self.damagables = pygame.sprite.Group()
         self.damagables.add(self.generator.jars.sprites())
-        self.interactables.add(self.generator.Treasure.sprites(), self.generator.Objectives.sprites())
+        self.interactables.add(self.generator.Treasure.sprites(), self.generator.Objectives.sprites(), self.generator.endpoint)
         self.Objectives.add(self.generator.Objectives.sprites())
         self.objectivesRemaining = self.generator.Objectivesnum
     def Gameloop(self):
@@ -152,7 +154,7 @@ class game(object):
                 elif event.key == pygame.K_LSHIFT:
                     self.cameraSpeed = 3
                 elif event.key == pygame.K_e:
-                    self.player.Interact(self.interactables)
+                    self.player.Interact(self.interactables, self)
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     self.player.Attack(self.angle, self.damagables, (self.ScreenLength, self.ScreenWidth))
@@ -244,11 +246,9 @@ class game(object):
         # Fill the background with white
         self.screen.fill((0, 0, 0))
         # if map is closed draw game window to screen
-        for i in self.interactables.sprites():
+        for i in self.Objectives.sprites():
             if i.Update():
                 self.objectivesRemaining -= 1
-                if self.objectivesRemaining == 0:
-                    print('finished')
         self.Objectives.draw(self.changeblesoverlay)
 
         if not self.mapopen:
@@ -284,6 +284,14 @@ class game(object):
         self.map.fill((0,0,0))
         self.map.blit(self.StaticMap, (0, 0))
         self.map.blit(self.changeblesoverlay, (0, 0))
+    def EndGame(self):
+        print('complete')
+        pygame.quit()
+        sys.exit(-1)
+    def GameOver(self):
+        print('Game Over')
+        pygame.quit()
+        sys.exit(-1)
 
 gameinstance = game()
 

@@ -251,11 +251,21 @@ def choosestart(generator, size):
     #picks a tile to spawn the start in
     location = (random.randrange(roomin[1][0], roomin[1][0]+roomin[0][0]-2)*10, random.randrange(roomin[1][1], roomin[1][1]+roomin[0][1]-2)*10)
     return location, roomin
+
+def chooseend(generator):
+    rooms = list(generator.rooms)
+    rooms.remove(generator.startRoom)
+    roomin = rooms[random.randrange(0, len(rooms))]
+    # picks a tile to spawn the start in
+    location = (random.randrange(roomin[1][0], roomin[1][0] + roomin[0][0] - 2) * 10,
+                random.randrange(roomin[1][1], roomin[1][1] + roomin[0][1] - 2) * 10)
+    return Classes.Endpoint(location, roomin)
 def enemySpawns(diffuculty, generator):
     #gets a list of all rooms
     locationstospawnenemys = list(generator.rooms)
     #removes start room
     locationstospawnenemys.remove(generator.startRoom)
+    locationstospawnenemys.remove(generator.endpoint.room)
     #loops through a random number based of the diffuculty
     enemys = pygame.sprite.Group()
     for i in range(0, random.randrange(diffuculty*generator.diffucultyincrese*2, diffuculty*generator.diffucultyincrese*5)):
@@ -275,6 +285,7 @@ def SpawnObjectives(generator, numObjectives, diffuculty):
     Objectives = pygame.sprite.Group()
     rooms = list(generator.rooms)
     rooms.remove(generator.startRoom)
+    rooms.remove(generator.endpoint.room)
     for i in range(0, numObjectives):
         Objectives.add(Classes.Objective(poispawnloc(generator, (5,5), rooms), math.ceil(diffuculty/2)))
     return Objectives
@@ -285,7 +296,6 @@ def poispawnloc(generator, size, rooms):
     #generates spawn location for POI
     room = list(rooms[random.randrange(0, len(rooms))])
     location = (random.randrange(room[1][0], room[1][0]+room[0][0]-size[0]), random.randrange(room[1][1], room[1][1]+room[0][1]-size[1]))
-    rooms.remove(room)
     return location
 def spawnchest(generator, loot, diffuculty):
     #spawns chests
@@ -322,6 +332,7 @@ class ProceduralGenerator():
         self.tiles = []
         self.startloc = None
         self.startRoom= None
+        self.endpoint = None
         self.enemys = []
         self.Treasure = pygame.sprite.Group()
         self.Jar = pygame.sprite.Group()
@@ -357,6 +368,8 @@ class ProceduralGenerator():
         print('Picking Start')
         self.startloc = choosestart(self, self.size)
         self.startRoom = self.startloc[1]
+        print('picking end')
+        self.endpoint = chooseend(self)
         print('spawning enemys')
         self.enemys = enemySpawns(Diffuculty, self)
         print('creating POIs')
@@ -399,6 +412,7 @@ class ProceduralGenerator():
         obstructions.add(self.jars.sprites())
         #adds start location
         map.blit(start, self.startloc[0])
+        map.blit(self.endpoint.image, self.endpoint.drawingrect)
         return map, obstructions
 
     def DrawChangebles(self, map):

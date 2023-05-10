@@ -38,7 +38,6 @@ class Enemy(pygame.sprite.Sprite):
                 collidetester = collides[0]
                 panic = False
                 if overlapRect.width == overlapRect.height:
-                    print('i hate bug fixing')
                     if len(collides) == 1:
                         panic = True
                     else:
@@ -46,10 +45,7 @@ class Enemy(pygame.sprite.Sprite):
                         collidetester = collides[1]
                         if overlapRect.width == overlapRect.height:
                             panic = True
-                print(overlapRect.width, overlapRect.height)
-                print(panic)
                 if overlapRect.width > overlapRect.height:
-                    print('wtf')
                     if obstructions.sprites()[collides[0]].rect.collidepoint(self.Location[0]/5,self.Location[1]/5) or obstructions.sprites()[collidetester].rect.collidepoint(self.Location[0]/5,self.Location[1]/5):
                         if math.sin(angle) < 0:
                             if math.cos(angle) > 0:
@@ -75,7 +71,6 @@ class Enemy(pygame.sprite.Sprite):
                             self.rect.y -= self.speed*3
                 else:
                     if obstructions.sprites()[collides[0]].rect.collidepoint(self.Location[0]/5,self.Location[1]/5) or obstructions.sprites()[collidetester].rect.collidepoint(self.Location[0]/5,self.Location[1]/5):
-                        print('test 1')
                         if math.cos(angle) < 0:
                             if math.sin(angle) > 0:
                                 self.rect.y += self.speed
@@ -88,7 +83,6 @@ class Enemy(pygame.sprite.Sprite):
                             self.rect.x += self.speed*3
                     else:
                         if math.cos(angle) > 0:
-                            print('test 2')
                             if math.sin(angle) > 0:
                                 self.rect.y += self.speed
                             else:
@@ -98,7 +92,6 @@ class Enemy(pygame.sprite.Sprite):
                             self.rect.y += self.speed * math.sin(angle)
                         if overlapRect.height > 1:
                             self.rect.x -= self.speed*3
-                print('break')
 
             else:
                 # if angle < 0:
@@ -188,8 +181,8 @@ class Objective(pygame.sprite.Sprite):
         self.complete = True
         self.Forms = None
         return True
-    def Interact(self, player):
-        self.player = player
+    def Interact(self, level):
+        self.player = level.player
         self.Activate()
     def Activate(self):
         if self.count <= 300:
@@ -322,7 +315,22 @@ class weapon(object):
 
 class basicsword(weapon):
     def __init__(self):
-        super(basicsword, self).__init__(50,50)
+        super(basicsword, self).__init__(50,10)
+
+class Endpoint(pygame.sprite.Sprite):
+    def __init__(self, location, room):
+        super(Endpoint, self).__init__()
+        self.image = pygame.Surface((20,20))
+        self.image.fill((77,208,225))
+        self.rect = pygame.rect.Rect(location[0]*5, location[1]*5, 100,100)
+        self.drawingrect = self.image.get_rect()
+        self.drawingrect.x = location[0]
+        self.drawingrect.y = location[1]
+        self.room = room
+    def Interact(self, level):
+        print('ENDPOINT REACHED')
+        if level.objectivesRemaining <= 0:
+            level.EndGame()
 
 
 class Player(pygame.sprite.Sprite):
@@ -342,17 +350,22 @@ class Player(pygame.sprite.Sprite):
         self.obstruction = None
         self.weilded = basicsword()
         self.level = level
-        self.armourlevel = 0
+        self.health = 100
+        self.armourlevel = 10
     def Inventory(self):
         pass
-    def Interact(self, interactables):
+    def Interact(self, interactables, level):
         for i in interactables.sprites():
             if self.bigrect.colliderect(i):
-                i.Interact(self)
+                i.Interact(level)
     def Attack(self, angle, damagables, size):
         self.weilded.attack(angle, self.rect.center, damagables, size, self.level)
     def damage(self, amount):
         print('hit')
+        print(self.health)
+        self.health -= amount
+        if self.health <= 0:
+            self.level.GameOver()
     def Health(self):
         pass
     # def MoveUp(self, moveTime, screensize: tuple):
