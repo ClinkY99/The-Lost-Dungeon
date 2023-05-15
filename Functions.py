@@ -107,3 +107,6 @@ def OverlapLine(distance, angle, startpoint, damgables, size):
             if i.overlaprect.clipline(startpoint, endpoint):
                 overlaps.append(i)
     return overlaps
+
+def get_font(size): # Returns Press-Start-2P in the desired size
+    return pygame.font.Font("assets/font.ttf", size)

@@ -303,7 +303,17 @@ class wall(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
-class weapon(object):
+class item(pygame.sprite.Sprite):
+    def __init__(self):
+        super(item, self).__init__()
+        #image max size = 250, 250 relative
+        self.description = ''
+        self.price = 0
+        self.name = ''
+        self.prereq = None
+        self.purchased = False
+
+class weapon(item):
     def __init__(self, range, damage):
         super(weapon, self).__init__()
         self.range = range
@@ -316,6 +326,24 @@ class weapon(object):
 class basicsword(weapon):
     def __init__(self):
         super(basicsword, self).__init__(50,10)
+        self.image = pygame.surface.Surface((250,250))
+        self.image.fill((130,24,235))
+        self.rect = self.image.get_rect()
+        self.description = 'This is a basic "sword"... \n it acts as a gun....\n and the enemies have the same weapon :)'
+        self.name = 'GUN'
+        self.price = 200
+        self.prereq =None
+
+class Bow(weapon):
+    def __init__(self):
+        super(Bow, self).__init__(50, 10)
+        self.image = pygame.surface.Surface((250, 250))
+        self.image.fill((216, 84, 84))
+        self.rect = self.image.get_rect()
+        self.description = 'This bow was created by the gods... \n but in reality it is just a rotting wood stick \n with some string attached :)'
+        self.name = 'Bow'
+        self.price = 700
+        self.prereq = None
 
 class Endpoint(pygame.sprite.Sprite):
     def __init__(self, location, room):
@@ -332,6 +360,11 @@ class Endpoint(pygame.sprite.Sprite):
         if level.objectivesRemaining <= 0:
             level.EndGame()
 
+class Coin(pygame.sprite.Sprite):
+    def __init__(self, location, value):
+        super(Coin, self).__init__()
+        self.image = pygame.image.load('./Art/Items/Coin.png')
+        self.rect = self.image.get_rect()
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, startloc, level):
@@ -352,6 +385,11 @@ class Player(pygame.sprite.Sprite):
         self.level = level
         self.health = 100
         self.armourlevel = 10
+
+        self.money = 700
+        self.XP = 0
+
+        self.items = []
     def Inventory(self):
         pass
     def Interact(self, interactables, level):

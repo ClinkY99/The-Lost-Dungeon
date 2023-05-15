@@ -6,6 +6,7 @@ import math
 from Procedural_Generator import ProceduralGenerator
 from Classes import Player
 import Classes
+from Shop import Shop
 
 
 class game(object):
@@ -85,7 +86,7 @@ class game(object):
         self.Gameloop()
     def Generatelevel(self):
         # generates map
-        self.generator.Generate(5, 10, 30, 5, True, 50, 10, 2, None, 3, 2, 5, 25)
+        self.generator.Generate(5, 10, 30, 5, True, 50, 10, 2, None, 3, 1, 5, 25)
         self.matrix = self.generator.matrix
         # inits player
         self.player = Player((self.generator.startloc[0][0], self.generator.startloc[0][1]), self)
@@ -285,9 +286,10 @@ class game(object):
         self.map.blit(self.StaticMap, (0, 0))
         self.map.blit(self.changeblesoverlay, (0, 0))
     def EndGame(self):
-        print('complete')
-        pygame.quit()
-        sys.exit(-1)
+        # print('complete')
+        # pygame.quit()
+        # sys.exit(-1)
+        Shop(self.player)
     def GameOver(self):
         print('Game Over')
         pygame.quit()
