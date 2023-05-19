@@ -3,10 +3,243 @@ import sys
 import pygame
 from pygame import mixer
 import math
+
+import Functions
 from Procedural_Generator import ProceduralGenerator
 from Classes import Player
 import Classes
 from Shop import Shop
+
+DEFAULT_IMAGE_SIZE = (1280, 720)
+
+class HUD(pygame.sprite.Sprite):
+    def __init__(self, ScreenLength, ScreenWidth, player, level):
+        self.ScreenLength = ScreenLength
+        self.ScreenWidth = ScreenWidth
+
+        self.EnlargmentFactor = self.ScreenLength / DEFAULT_IMAGE_SIZE[0], self.ScreenWidth / DEFAULT_IMAGE_SIZE[1]
+        self.player = player
+
+        self.image = pygame.transform.scale(pygame.image.load('Art/HUD/HUD Background.png').convert_alpha(),
+                                          (self.ScreenLength, self.ScreenWidth))
+        self.image.set_alpha(200)
+
+        self.rect = self.image.get_rect()
+
+        self.Item = pygame.transform.scale(pygame.image.load('Art/HUD/Items HUD.png').convert_alpha(), (
+        self.ScreenLength / DEFAULT_IMAGE_SIZE[0] * 250, self.ScreenWidth / DEFAULT_IMAGE_SIZE[1] * 250))
+        self.ItemDisplay = self.Item.copy()
+        self.ItemDisplayRect = self.ItemDisplay.get_rect(center=(
+        self.ScreenLength - self.ItemDisplay.get_size()[0] / 2, self.ScreenWidth - self.ItemDisplay.get_size()[1] / 2))
+        self.ItemDisplay.set_colorkey((255,255,255))
+
+        self.KeybuttonOverlay = pygame.transform.scale(pygame.image.load('Art/HUD/KeyButtons Overlay.png').convert_alpha(), (
+        self.ScreenLength / DEFAULT_IMAGE_SIZE[0] * 250, self.ScreenWidth / DEFAULT_IMAGE_SIZE[1] * 250))
+
+        self.HUD = pygame.transform.scale(pygame.image.load('Art/HUD/HUD Background.png').convert_alpha(),
+                                          (self.ScreenLength, self.ScreenWidth))
+
+        self.MainWeaponsDisplay = pygame.Surface(
+            (self.ScreenLength / DEFAULT_IMAGE_SIZE[0] * 92, self.ScreenWidth / DEFAULT_IMAGE_SIZE[1] * 92))
+        self.MainWeaponsDisplayRect = self.MainWeaponsDisplay.get_rect()
+        self.MainWeaponsDisplayRect.x = 129 * self.ScreenLength / DEFAULT_IMAGE_SIZE[0]
+        self.MainWeaponsDisplayRect.y = 129 * self.ScreenWidth / DEFAULT_IMAGE_SIZE[1]
+        self.MainWeaponsDisplay.set_colorkey((255,255,255))
+        if player.primaryWeapon != None:
+            self.MainWeaponImage = pygame.transform.scale(player.primaryWeapon.image, self.MainWeaponsDisplay.get_size())
+
+        self.BlockingDisplay = self.MainWeaponsDisplay.copy()
+        self.BlockingDisplay.fill((70,70,70))
+        self.BlockingDisplay.set_alpha(100)
+        self.BlockingDisplayRect = self.MainWeaponsDisplayRect.copy()
+
+        self.SecondaryWeaponsDisplay = pygame.Surface(
+            (self.ScreenLength / DEFAULT_IMAGE_SIZE[0] * 69, self.ScreenWidth / DEFAULT_IMAGE_SIZE[1] * 69))
+        self.SecondaryWeaponsDisplayRect = self.SecondaryWeaponsDisplay.get_rect()
+        self.SecondaryWeaponsDisplayRect.x = 33 * self.ScreenLength / DEFAULT_IMAGE_SIZE[0]
+        self.SecondaryWeaponsDisplayRect.y = 33 * self.ScreenWidth / DEFAULT_IMAGE_SIZE[1]
+        self.SecondaryWeaponsDisplay.set_colorkey((255, 255, 255))
+        if player.secondaryWeapon != None:
+            self.SecondaryWeaponsImage = pygame.transform.scale(player.secondaryWeapon.image, self.SecondaryWeaponsDisplay.get_size())
+
+        self.ConsumablesDisplay = self.SecondaryWeaponsDisplay.copy()
+        self.ConsumablesDisplayRect = self.SecondaryWeaponsDisplay.get_rect()
+        self.ConsumablesDisplayRect.x = 13 * self.ScreenLength / DEFAULT_IMAGE_SIZE[0]
+        self.ConsumablesDisplayRect.y = 153 * self.ScreenWidth / DEFAULT_IMAGE_SIZE[1]
+        self.ConsumablesDisplay.set_colorkey((255, 255, 255))
+
+        if player.equippedConsumable != None:
+            self.ConsumablesImage = pygame.transform.scale(player.equippedConsumable.image, self.ConsumablesDisplay.get_size())
+
+
+
+        self.MagicDisplay = self.SecondaryWeaponsDisplay.copy()
+        self.MagicDisplayRect = self.SecondaryWeaponsDisplay.get_rect()
+        self.MagicDisplayRect.x = 153 * self.ScreenLength / DEFAULT_IMAGE_SIZE[0]
+        self.MagicDisplayRect.y = 13 * self.ScreenWidth / DEFAULT_IMAGE_SIZE[1]
+        self.MagicDisplay.set_colorkey((255, 255, 255))
+
+        if player.equppedSpellbook != None:
+            self.MagicDisplayImage = pygame.transform.scale(player.equppedSpellbook.image, self.MagicDisplay.get_size())
+
+
+        self.countPA = 0
+        self.countSA = 0
+        self.countSU = 0
+        self.countCU = 0
+        self.countSC = 0
+
+        self.healthbarimage =  pygame.transform.scale(pygame.image.load('Art/HUD/Health bar Temp.png').convert_alpha(), (
+        self.ScreenLength / DEFAULT_IMAGE_SIZE[0] * 200, self.ScreenWidth / DEFAULT_IMAGE_SIZE[1] * 40))
+        self.healthbar = self.healthbarimage.copy()
+        self.healthbar.set_colorkey((0,0,0))
+        self.healthbarrect = self.healthbar.get_rect()
+        self.healthbarrect.x = 25
+        self.healthbarrect.y = 25
+
+        self.healthbarlevel = pygame.Surface((
+        self.ScreenLength / DEFAULT_IMAGE_SIZE[0] * (200/5)*4, self.ScreenWidth / DEFAULT_IMAGE_SIZE[1] * (28/5)*4))
+        self.healthbarlevelrect = self.healthbarlevel.get_rect()
+        self.healthbarlevelrect.x = (39/5) * 4 *self.ScreenLength / DEFAULT_IMAGE_SIZE[0]
+        self.healthbarlevelrect.y = self.ScreenWidth / DEFAULT_IMAGE_SIZE[1] * (12/5) * 4
+        self.healthbarlevel.set_colorkey((0,0,0))
+
+        self.healthIndicator = self.healthbarlevel.copy()
+        self.healthIndicator.fill((211, 28, 28))
+
+        self.healthbarlevel.blit(self.healthIndicator, (0,0))
+
+        self.healthbar.fill((0, 0, 0))
+        self.healthbar.blit(self.healthbarlevel, self.healthbarlevelrect)
+        self.healthbar.blit(self.healthbarimage, (0, 0))
+
+        self.damaged = -1
+
+        self.Coins = Functions.get_font(int(self.EnlargmentFactor[0]*25)).render(f'{player.money}', False, (255,239,0))
+
+        self.level = Functions.get_font(int(self.EnlargmentFactor[0]*25)).render(f'Level {player.levelnum}', False, (255,255,255))
+
+        self.Score = Functions.get_font(int(self.EnlargmentFactor[0]*25)).render(f'Score:{player.XP}', False, (255,255,255))
+
+        self.ObjectivesRemaining = Functions.get_font(int(self.EnlargmentFactor[0]*25)).render(f'Objectives Remaining: {level.objectivesRemaining}', True, (0,166,60))
+
+        self.ObjectivesRemainingRect = self.ObjectivesRemaining.get_rect(center= (ScreenLength/2, 25))
+        self.ObjectivesRemainingRect = self.ObjectivesRemaining.get_rect(center=(ScreenLength / 2, 25))
+
+    def Update(self,player):
+        self.image.fill((1,1,1))
+
+        self.ItemDisplay.fill((255,255,255))
+
+        self.ItemDisplay.blit(self.Item, (0,0))
+
+        self.MainWeaponsDisplay.fill((255, 255, 255))
+        self.SecondaryWeaponsDisplay.fill((255, 255, 255))
+        self.ConsumablesDisplay.fill((255, 255, 255))
+        self.MagicDisplay.fill((255, 255, 255))
+
+
+        if self.countPA > 0:
+            self.PrimaryAttack(player)
+        elif player.primaryWeapon != None:
+            self.MainWeaponsDisplay.blit(self.MainWeaponImage, (0,0))
+        if self.countSA > 0:
+            self.SecondaryAttack(player)
+        if self.countSU > 0:
+            self.SecondaryWeaponUsed(player)
+        elif player.secondaryWeapon != None:
+            self.SecondaryWeaponsDisplay.blit(self.SecondaryWeaponsImage, (0,0))
+        if self.countCU >0:
+            self.ConsumableUsed(player)
+        elif player.equippedConsumable != None:
+            self.ConsumablesDisplay.blit(self.ConsumablesImage, (0,0))
+        if self.countSC > 0:
+            self.SpellCast(player)
+        elif player.equppedSpellbook != None:
+            self.MagicDisplay.blit(self.MagicDisplayImage, (0,0))
+
+
+        if self.damaged > 0:
+            self.healthbar.fill((0, 0, 0))
+            self.healthbarlevel.fill((0, 0, 0))
+            self.healthIndicator.fill((255, 255, 255))
+            self.damaged-=1
+            self.healthbarlevel.blit(self.healthIndicator,
+                                     (((player.health - 100) / 5) * 8 * self.ScreenLength / DEFAULT_IMAGE_SIZE[0], 0))
+            self.healthbar.blit(self.healthbarlevel, self.healthbarlevelrect)
+            self.healthbar.blit(self.healthbarimage, (0, 0))
+        elif self.damaged == 0:
+            self.healthbar.fill((0, 0, 0))
+            self.healthbarlevel.fill((0, 0, 0))
+            self.healthIndicator.fill((211,28,28))
+            self.damaged-=1
+            self.healthbarlevel.blit(self.healthIndicator,
+                                     (((player.health - 100) / 5) * 8 * self.ScreenLength / DEFAULT_IMAGE_SIZE[0], 0))
+            self.healthbar.blit(self.healthbarlevel, self.healthbarlevelrect)
+            self.healthbar.blit(self.healthbarimage, (0, 0))
+
+
+
+        self.ItemDisplay.blit(self.MainWeaponsDisplay, self.MainWeaponsDisplayRect)
+        self.ItemDisplay.blit(self.SecondaryWeaponsDisplay, self.SecondaryWeaponsDisplayRect)
+        self.ItemDisplay.blit(self.ConsumablesDisplay, self.ConsumablesDisplayRect)
+        self.ItemDisplay.blit(self.MagicDisplay, self.MagicDisplayRect)
+        self.ItemDisplay.blit(self.KeybuttonOverlay, (0,0))
+
+        self.image.blit(self.HUD, (0,0))
+        self.image.blit(self.healthbar, self.healthbarrect)
+        self.image.blit(self.Coins, (15, self.healthbarrect.height+50))
+        self.image.blit(self.level, (15, self.healthbarrect.height + self.Coins.get_size()[1]+75))
+        self.image.blit(self.Score, (15, self.healthbarrect.height + self.Coins.get_size()[1] + self.level.get_size()[1] + 100))
+        self.image.blit(self.ObjectivesRemaining, self.ObjectivesRemainingRect)
+        self.image.blit(self.ItemDisplay, self.ItemDisplayRect)
+        self.image.set_colorkey((1,1,1))
+        self.healthIndicator.fill((211,28,28))
+
+
+    def PrimaryAttack(self, player):
+        weapon = self.MainWeaponImage.copy()
+        weapon = pygame.transform.scale_by(weapon, ((-1/2)*((1/4)*self.countPA -1)**2 +1.5))
+        rect = weapon.get_rect(center= (self.MainWeaponsDisplay.get_size()[0]/2, self.MainWeaponsDisplay.get_size()[1]/2))
+        self.MainWeaponsDisplay.blit(weapon, rect)
+        self.countPA += 1
+        if self.countPA >= 8:
+            self.countPA = 0
+
+    def SecondaryAttack(self,player):
+        self.MainWeaponsDisplay.blit(self.BlockingDisplay,(0, self.BlockingDisplay.get_size()[1]*(self.countSA/player.primaryWeapon.secondaryCooldown)))
+        self.countSA+=1
+        if self.countSA >= player.primaryWeapon.secondaryCooldown:
+            self.countSA = 0
+
+    def SecondaryWeaponUsed(self,player):
+        pass
+    def ConsumableUsed(self,player):
+        pass
+    def SpellCast(self,player):
+        pass
+
+    def damage(self, player):
+        self.damaged = 2
+
+    def UpdateCoins(self):
+        self.Coins = Functions.get_font(int(self.EnlargmentFactor[0] * 25)).render(f'{self.player.money}', False,
+                                                                                   (255,239,0))
+    def UpdateScore(self,player):
+        self.Score = Functions.get_font(int(self.EnlargmentFactor[0]*25)).render(f'Score:{player.XP}', False, (255,255,255))
+    def UpdateObjectiveCount(self, level):
+        if level.objectivesRemaining > 0:
+            self.ObjectivesRemaining = Functions.get_font(int(self.EnlargmentFactor[0] * 25)).render(
+                f'Objectives Remaining: {level.objectivesRemaining}', True, (0, 166, 60))
+        else:
+            self.ObjectivesRemaining = Functions.get_font(int(self.EnlargmentFactor[0] * 25)).render(
+                f'Find The Exit', True, (0, 166, 60))
+        self.ObjectivesRemainingRect = self.ObjectivesRemaining.get_rect(center=(self.ScreenLength / 2, 25))
+
+
+
+
+
 
 
 class game(object):
@@ -18,25 +251,31 @@ class game(object):
         mixer.init()
 
         # sets up temp background music
-        mixer.music.load('Music/Character_Menu.mp3')
+        mixer.music.load('Music/Game_Theme1.mp3')
         mixer.music.play(-1)
         mixer.music.set_volume(0.10)
 
 
-        self.ScreenLength= 1870
-        self.ScreenWidth = 1030
+        self.ScreenLength= 1920
+        self.ScreenWidth = 1080
 
         #sets up the generator class with tile size
-        self.generator = ProceduralGenerator(int(self.ScreenLength / 10), int(self.ScreenWidth / 10))
+        self.generator = ProceduralGenerator(int(self.ScreenLength / 10), int(self.ScreenWidth / 10), 75)
 
         # Set up the drawing window
-        self.screen = pygame.display.set_mode([self.ScreenLength, self.ScreenWidth])
+        self.screen = pygame.display.set_mode([self.ScreenLength, self.ScreenWidth], pygame.FULLSCREEN)
         self.StaticMap = pygame.Surface((self.ScreenLength, self.ScreenWidth))
         self.changeblesoverlay = pygame.Surface((self.ScreenLength*5, self.ScreenWidth*5))
         self.enemysOverlay = pygame.Surface((self.ScreenLength*5, self.ScreenWidth*5))
         self.map = pygame.Surface((self.ScreenLength, self.ScreenWidth))
         self.mouse = Classes.Mouse()
+        self.itemOverlay = self.enemysOverlay.copy()
 
+
+
+
+
+        self.items = pygame.sprite.Group()
 
         self.enemys = pygame.sprite.Group()
 
@@ -49,7 +288,7 @@ class game(object):
         pygame.mouse.set_visible(False)
 
         # loads image
-        self.direction_indicator = pygame.transform.scale_by(pygame.image.load("Art/Character/Direction-Temp.png"), 1 / 6).convert()
+        self.direction_indicator = pygame.transform.scale_by(pygame.image.load("Art/Character/Direction-Temp.png").convert_alpha(), 1 / 6).convert()
         self.direction_indicator.set_colorkey((255, 255, 255))
         self.direction_indicator_rect = self.direction_indicator.get_rect(center=(self.ScreenLength / 2, self.ScreenWidth / 2))
 
@@ -90,6 +329,8 @@ class game(object):
         self.matrix = self.generator.matrix
         # inits player
         self.player = Player((self.generator.startloc[0][0], self.generator.startloc[0][1]), self)
+
+
         # draws map
         self.StaticMap, self.obstructions = self.generator.DrawMap(self.StaticMap)
         self.changeblesoverlay = self.generator.DrawChangebles(self.changeblesoverlay)
@@ -120,14 +361,23 @@ class game(object):
         self.interactables.add(self.generator.Treasure.sprites(), self.generator.Objectives.sprites(), self.generator.endpoint)
         self.Objectives.add(self.generator.Objectives.sprites())
         self.objectivesRemaining = self.generator.Objectivesnum
+        self.HUD = HUD(self.ScreenLength, self.ScreenWidth, self.player, self)
     def Gameloop(self):
+        self.clock.tick(120)
+        try:
+            self.cameraSpeed = 30 / self.clock.get_fps() * 1.5
+        except:
+            pass
         while self.running:
             self.eventcheck()
             self.Movement()
             self.interactioncheck()
             self.UpdateHostiles()
+            self.UpdateItems()
+            self.HUD.Update(self.player)
             self.update()
             self.clock.tick(120)
+            print(self.clock.get_fps())
 
     def eventcheck(self):
         for event in pygame.event.get():
@@ -138,27 +388,24 @@ class game(object):
                 if event.key == pygame.K_m:
                     self.maptriggered = False
                 elif event.key == pygame.K_LSHIFT:
-                    self.cameraSpeed = 1.5
+                    self.cameraSpeed = 30/self.clock.get_fps()*1.5
             elif event.type == pygame.KEYDOWN:
                 # if user presses M open map
-                if event.key == pygame.K_m:
-                    if self.mapopen and not self.maptriggered:
-                        self.mapopen = False
-                    elif not self.mapopen:
-                        self.mapopen = True
-                elif event.key == pygame.K_ESCAPE:
+                if event.key == pygame.K_ESCAPE:
                     print('ENEMIES')
                     print(len(self.enemys.sprites()))
                     self.running = False
                 elif event.key == pygame.K_SPACE:
-                    self.player.Attack(self.angle, self.damagables, (self.ScreenLength, self.ScreenWidth))
-                elif event.key == pygame.K_LSHIFT:
-                    self.cameraSpeed = 3
-                elif event.key == pygame.K_e:
+                    print(self.objectivesRemaining)
                     self.player.Interact(self.interactables, self)
+                elif event.key == pygame.K_LSHIFT:
+                    self.cameraSpeed = 30/self.clock.get_fps()*3
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     self.player.Attack(self.angle, self.damagables, (self.ScreenLength, self.ScreenWidth))
+                    self.HUD.countPA += 1
+                if event.button == 3 and self.HUD.countSA == 0:
+                    self.HUD.countSA +=1
             mouse_x, mouse_y = pygame.mouse.get_pos()
             self.angle = math.degrees(math.atan2((mouse_y - self.ScreenWidth / 2), (mouse_x - self.ScreenLength / 2))) +135
 
@@ -229,6 +476,12 @@ class game(object):
             if enemys:
                 self.enemys.add(enemys)
                 self.damagables.add(self.enemys)
+        for i in self.Objectives.sprites():
+            if i.Interact(self):
+
+                self.objectivesRemaining -= 1
+                self.HUD.UpdateObjectiveCount(self)
+
 
     def UpdateHostiles(self):
         for i in self.enemys.sprites():
@@ -236,9 +489,12 @@ class game(object):
         self.enemysOverlay.fill((0,0,0))
         self.enemys.draw(self.enemysOverlay)
         self.enemysOverlay.set_colorkey((0,0,0))
-
-
-
+    def UpdateItems(self):
+        for i in self.items.sprites():
+            i.Update(self.player)
+        self.itemOverlay.fill((0,0,0))
+        self.items.draw(self.itemOverlay)
+        self.itemOverlay.set_colorkey((0,0,0))
     def update(self):
         # rotates direction indicator based off angle
         direction_indicator_rotated = pygame.transform.rotate(self.direction_indicator, -self.angle)
@@ -247,24 +503,18 @@ class game(object):
         # Fill the background with white
         self.screen.fill((0, 0, 0))
         # if map is closed draw game window to screen
-        for i in self.Objectives.sprites():
-            if i.Update():
-                self.objectivesRemaining -= 1
         self.Objectives.draw(self.changeblesoverlay)
 
-        if not self.mapopen:
-            self.screen.blit(self.BIGStaticMap, (self.camera_X, self.camera_Y))
-            self.screen.blit(self.changeblesoverlay, (self.camera_X, self.camera_Y))
-            self.screen.blit(self.enemysOverlay, (self.camera_X, self.camera_Y))
-            self.screen.blit(self.player.image, (self.ScreenLength / 2 - 10, self.ScreenWidth / 2 - 10))
-            self.screen.blit(direction_indicator_rotated, rect)
-            self.mouse.Update(self.player.weilded.range,(self.ScreenLength / 2, self.ScreenWidth / 2))
-            self.screen.blit(self.mouse.image, self.mouse.rect)
 
-        # otherwise draw map
-        else:
-            self.screen.blit(self.map, (0, 0))
-            self.screen.blit(self.player.tinyimage, self.playerLocation)
+        self.screen.blit(self.BIGStaticMap, (self.camera_X, self.camera_Y))
+        self.screen.blit(self.changeblesoverlay, (self.camera_X, self.camera_Y))
+        self.screen.blit(self.enemysOverlay, (self.camera_X, self.camera_Y))
+        self.screen.blit(self.itemOverlay, (self.camera_X, self.camera_Y))
+        self.screen.blit(self.player.image, (self.ScreenLength / 2 - 10, self.ScreenWidth / 2 - 10))
+        self.screen.blit(direction_indicator_rotated, rect)
+        self.mouse.Update(self.player.primaryWeapon.range,(self.ScreenLength / 2, self.ScreenWidth / 2))
+        self.screen.blit(self.mouse.image, self.mouse.rect)
+        self.screen.blit(self.HUD.image, (0,0))
 
         # updates playerlocation
         self.player.rect.x = self.playerLocation[0]
@@ -285,6 +535,7 @@ class game(object):
         self.map.fill((0,0,0))
         self.map.blit(self.StaticMap, (0, 0))
         self.map.blit(self.changeblesoverlay, (0, 0))
+
     def EndGame(self):
         # print('complete')
         # pygame.quit()

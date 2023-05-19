@@ -376,6 +376,7 @@ class ProceduralGenerator():
         self.treasure = spawnchest(self,loot, Diffuculty)
         self.jars = spawnJars(self, maxjars)
         print('Completed Generation')
+        self.Objectivesnum = ObjectivesNum
     def DrawMap(self,map):
         #sets up all Surfaces
         obstructions = pygame.sprite.Group()
