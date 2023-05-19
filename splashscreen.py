@@ -2,8 +2,9 @@ import pygame
 pygame.init()
 display=pygame.display.set_mode((500, 600))
 clock= pygame.time.Clock()
-
 FPS=50
+def get_font(size): # Returns Press-Start-2P in the desired size
+    return pygame.font.Font("assets/font.ttf", size)
 screen = pygame.display.set_mode((1280, 720))
 
 background = pygame.image.load("assets/Hotpot-2.png")

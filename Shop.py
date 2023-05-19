@@ -2,10 +2,10 @@ import pygame, sys
 from pygame import mixer
 from button import Button, ImageButton
 import Functions, Classes
-from MainMenu import main_menu
+from mainmenu import main_menu
 
-ScreenLength = 1870
-ScreenWidth = 1030
+ScreenLength = 1280
+ScreenWidth = 720
 
 screen = pygame.display.set_mode((ScreenLength, ScreenWidth))
 screen.fill((255,255,255))
@@ -202,4 +202,4 @@ class Shop():
                             self.IncrementItems(1)
             pygame.display.update()
 
-#Shop(Classes.Player((0,0), None))
+Shop(Classes.Player((0,0), None))
