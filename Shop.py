@@ -2,10 +2,10 @@ import pygame, sys
 from pygame import mixer
 from button import Button, ImageButton
 import Functions, Classes
-from mainmenu import main_menu
+from MainMenu import main_menu
 
-ScreenLength = 1280
-ScreenWidth = 720
+ScreenLength = 1920
+ScreenWidth = 1080
 
 screen = pygame.display.set_mode((ScreenLength, ScreenWidth))
 screen.fill((255,255,255))
@@ -17,10 +17,10 @@ class Shop():
 
         mixer.music.load('Music/game_thingie_shop.mp3')
         mixer.music.play(-1)
-        mixer.music.set_volume(0.10)
+        mixer.music.set_volume(0.90)
 
-        self.ScreenLength = 1870
-        self.ScreenWidth = 1030
+        self.ScreenLength = 1920
+        self.ScreenWidth = 1080
 
         self.screen = screen
 
@@ -50,9 +50,9 @@ class Shop():
         Rect.center = (self.Description.get_size()[0]/2, self.Description.get_size()[1]/2)
         pygame.draw.rect(self.Description, (107,107,107),Rect, border_radius=25)
         self.Description.set_colorkey((0,0,0))
-        self.PurchasedScreen = pygame.transform.scale(pygame.image.load('./Art/Shop/Sold Screen.png'), (400, self.ScreenWidth//2.5))
+        self.PurchasedScreen = pygame.transform.scale(pygame.image.load('./Art/Shop/Sold Screen.png').convert_alpha(), (400, self.ScreenWidth//2.5))
 
-        self.coin = pygame.image.load('Art/Items/Coin.png')
+        self.coin = pygame.image.load('Art/Items/Coin.png').convert_alpha()
 
         self.imagedrawrect = pygame.rect.Rect(0,0,260,260)
         self.imagedrawrect.center = (self.Itemdisplay.get_size()[0]//2, self.Itemdisplay.get_size()[1]//2-25)
@@ -65,7 +65,7 @@ class Shop():
         self.MENUtext = Functions.get_font(100).render("Shop", True, "#b68f40")
         self.MENUrect = self.MENUtext.get_rect(center=(self.ScreenLength/2, 100))
 
-        self.wallet = Functions.get_font(50).render(f'{self.player.money}', True, (255,255,255))
+        self.wallet = Functions.get_font(50).render(f'{self.player.money}', True, (255,239,0))
         self.walletRect = self.wallet.get_rect(center= (self.ScreenLength-self.wallet.get_size()[0]-20, 200))
 
 
@@ -202,4 +202,4 @@ class Shop():
                             self.IncrementItems(1)
             pygame.display.update()
 
-Shop(Classes.Player((0,0), None))
+#Shop(Classes.Player((0,0), None))
