@@ -111,7 +111,7 @@ def NewGame(screen,size, background, enlargmentfactor):
                             background.set_alpha(i/5)
                             screen.blit(background, (0,0))
                             pygame.display.update()
-                        Main.game(TutorialButton.clicked, player, 1, seed)
+                        Main.game(TutorialButton.clicked, player, 1, seed, screen, screen.get_size())
 
 
 
@@ -216,7 +216,7 @@ def loadGame(screen,size, background, enlargmentfactor ):
                             background.set_alpha(i / 5)
                             screen.blit(background, (0, 0))
                             pygame.display.update()
-                        Main.game(False, player, 1, savedata['Seed'])
+                        Main.game(False, player, 1, savedata['Seed'],screen, screen.get_size())
 
         name_input_box.update(event_list)
 
@@ -298,7 +298,7 @@ def play(display,size):
                             background.set_alpha(i)
                             display.blit(background, (0,0))
                             pygame.display.update()
-                        Main.game(False, player, player.levelnum, savedata['Seed'])
+                        Main.game(False, player, player.levelnum, savedata['Seed'],screen, screen.get_size())
                     if LoadGame.checkForInput(playmouseposition):
                         loadGame(display,display.get_size(), display.copy(), enlargmentfactor)
                         display.blit(background, (0, 0))
