@@ -407,15 +407,13 @@ class game(object):
                     print('ENEMIES')
                     print(len(self.enemys.sprites()))
                     self.running = False
-                elif event.key == pygame.K_SPACE:
+                elif event.key == pygame.K_f:
                     print(self.objectivesRemaining)
                     self.player.Interact(self.interactables, self)
                 elif event.key == pygame.K_LSHIFT:
                     self.cameraSpeed = 30/self.clock.get_fps()*3
                 elif event.key == pygame.K_ESCAPE:
                     Pause_menu(self.screen, self.screen.get_size(), self.player)
-                elif event.key == pygame.K_y:
-                    self.GameOver()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     self.player.Attack(self.angle, self.damagables, (self.ScreenLength, self.ScreenWidth))

@@ -298,7 +298,7 @@ def play(display,size):
                             background.set_alpha(i)
                             display.blit(background, (0,0))
                             pygame.display.update()
-                        Main.game(False, player, player.levelnum, savedata['Seed'],screen, screen.get_size())
+                        Main.game(False, player, player.levelnum, savedata['Seed'],display, display.get_size())
                     if LoadGame.checkForInput(playmouseposition):
                         loadGame(display,display.get_size(), display.copy(), enlargmentfactor)
                         display.blit(background, (0, 0))
