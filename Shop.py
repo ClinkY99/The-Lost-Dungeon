@@ -144,7 +144,7 @@ class Shop():
 
     def Continue(self):
         Functions.SaveGame(self.player)
-        Main.game(False, self.player, self.player.levelnum, self.player.seed)
+        Main.game(False, self.player, self.player.levelnum, self.player.seed, self.screen, self.screen.get_size())
 
     def Shop(self):
         self.GetItems()

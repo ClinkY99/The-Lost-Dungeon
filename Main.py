@@ -246,7 +246,7 @@ class HUD(pygame.sprite.Sprite):
 
 
 class game(object):
-    def __init__(self, tutorial, player, levelnum, seed):
+    def __init__(self, tutorial, player, levelnum, seed, screen, screensize):
         # sets up pygame and mixer
 
 
@@ -266,14 +266,14 @@ class game(object):
         self.tutorial = tutorial
         self.levelnum = levelnum
 
-        self.ScreenLength= 1920
-        self.ScreenWidth = 1080
+        self.ScreenLength= screensize[0]
+        self.ScreenWidth = screensize[1]
 
         #sets up the generator class with tile size
         self.generator = ProceduralGenerator(2*levelnum+75,2*levelnum+75, seed+levelnum)
 
         # Set up the drawing window
-        self.screen = pygame.display.set_mode([self.ScreenLength, self.ScreenWidth], pygame.FULLSCREEN)
+        self.screen = screen
         self.StaticMap = pygame.Surface((self.ScreenLength, self.ScreenWidth))
         self.changeblesoverlay = pygame.Surface((self.ScreenLength*5, self.ScreenWidth*5))
         self.enemysOverlay = pygame.Surface((self.ScreenLength*5, self.ScreenWidth*5))
