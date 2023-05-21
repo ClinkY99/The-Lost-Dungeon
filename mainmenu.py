@@ -1,28 +1,273 @@
 import math
-import pygame, sys
-from button import Button
-pygame.init()
+import random
+
+import pygame, sys, json, Interactables, Main
+
+import Classes
+from Interactables import Button
 DEFAULT_IMAGE_SIZE = (1280, 720)
-ScreenLength = 1280
-ScreenWidth = 720
-screen = pygame.display.set_mode((ScreenLength, ScreenWidth))
 def get_font(size): # Returns Press-Start-2P in the desired size
     return pygame.font.Font("assets/font.ttf", size)
 
-# play function controls text, display, and button clicking for play screen
-def play(display):
-    while True:
-        playmouseposition = pygame.mouse.get_pos()
-        display.fill("blue")
-        PLAYtext = get_font(45).render("This is the PLAY display.", True, "White")
-        PLAYrect = PLAYtext.get_rect(center=(640, 260))
-        display.blit(PLAYtext,PLAYrect)
+def NewGame(screen,size, background, enlargmentfactor):
+    newgameopen = True
 
-        # creating the buttons
-        playback = Button(image=None, pos=(640, 460),
-                            text_input="BACK", font=get_font(75), base_color="White", hovering_color="turquoise")
-        playback.changeColor(playmouseposition)
-        playback.update(display)
+    newgamebackground = pygame.Surface((size[0]/3, size[1]/3))
+    newgamebackground.fill((50,50,50))
+    newgamebackground.set_alpha(225)
+    newgamebackgroundrect = newgamebackground.get_rect(center = (size[0]/2, size[1]/2))
+
+
+    screen.blit(newgamebackground, newgamebackgroundrect)
+
+    MENUtext = get_font(int(15*enlargmentfactor[0])).render("Name:", True, (255,255,255))
+    MENUrect = MENUtext.get_rect(center=(size[0]/3, size[1]/2-30*enlargmentfactor[0]))
+
+    name_input_box = Interactables.TextInputBox(size[0]/2, size[1]/2-10*enlargmentfactor[1], 200*enlargmentfactor[0], get_font(int(20*enlargmentfactor[0])), (255,255,255), highlightcolor=(147,147,147))
+
+    MENUrect.x = name_input_box.rect.x
+
+    BackButton = Button(image=None, pos=(size[0]/3+50*enlargmentfactor[0], size[1]/2-50*enlargmentfactor[0]),
+                        text_input="Back", font=get_font(int(15*enlargmentfactor[0])), base_color="#d7fcd4", hovering_color="White")
+
+    ContinueButton = Button(image=None, pos=(size[0]/2 + newgamebackground.get_size()[0]/4, size[1]/2+50*enlargmentfactor[0]),
+                        text_input="Continue", font=get_font(int(15*enlargmentfactor[0])), base_color="#d7fcd4", hovering_color="White")
+
+    TutorialButton = Interactables.ImageButton(image=pygame.transform.scale_by(pygame.image.load('./Art/Menu/CheckBox_Unchecked.png'), enlargmentfactor[0]/3),
+                                               Hoverimage= pygame.transform.scale_by(pygame.image.load('./Art/Menu/CheckBox_Checked.png'), enlargmentfactor[0]/3),
+                                                pos=(size[0]/2 - 33 * enlargmentfactor[0],size[1]/2 + 40*enlargmentfactor[1]), stayclicked=True)
+    TutorialButton.rect.x = name_input_box.rect.x
+
+
+
+
+    while newgameopen:
+
+        mousepositon = pygame.mouse.get_pos()
+
+        screen.blit(background, (0, 0))
+        screen.blit(newgamebackground, newgamebackgroundrect)
+        screen.blit(MENUtext, MENUrect)
+        screen.blit(name_input_box.image, name_input_box.rect)
+
+        for i in [BackButton, ContinueButton, TutorialButton]:
+            i.changeColor(mousepositon)
+            i.update(screen)
+
+
+        event_list = pygame.event.get()
+        for event in event_list:
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    TutorialButton.checkForInput(mousepositon)
+                    if BackButton.checkForInput(mousepositon):
+                        newgameopen = False
+                    if ContinueButton.checkForInput(mousepositon):
+                        pygame.mixer.music.fadeout(750)
+                        name = ''
+                        file = open('./Saves/Save.Dungeon', 'r')
+
+                        jsondata = json.load(file)
+                        if name_input_box.text == '':
+                            for i in range(1, 200):
+                                try:
+                                    jsondata['Saves'][f'Player {i}']
+                                except:
+                                    name = f'Player {i}'
+                                    file.close()
+                                    break
+                        else:
+                            name = name_input_box.text
+
+                        file = open('./Saves/Save.Dungeon', 'w')
+                        seed = random.randrange(sys.maxsize)
+
+                        player = Classes.Player(name, seed)
+
+
+                        jsonoutput = {
+                            "Level" : 1,
+                            "Seed" :seed ,
+                            "Player Data" : {
+                                "coins": 0,
+                                "health" : 100,
+                                "score" : 0,
+                                "items": [i.name for i in player.items]
+                            }
+                        }
+
+                        jsondata["Saves"][f'{name}'] = jsonoutput
+
+                        jsondata['MostRecentSave'] = name
+
+                        json.dump(jsondata, file, indent= 4)
+                        file.close()
+
+                        for i in range(1,250):
+                            background.fill((0,0,0))
+                            background.set_alpha(i/5)
+                            screen.blit(background, (0,0))
+                            pygame.display.update()
+                        Main.game(TutorialButton.clicked, player, 1, seed)
+
+
+
+
+        name_input_box.update(event_list)
+
+        pygame.display.update()
+
+def loadGame(screen,size, background, enlargmentfactor ):
+    loadgameopen = True
+
+    loadgamebackground = pygame.Surface((size[0] / 3, size[1] / 3))
+    loadgamebackground.fill((50, 50, 50))
+    loadgamebackground.set_alpha(225)
+    loadgamebackgroundrect = loadgamebackground.get_rect(center=(size[0] / 2, size[1] / 2))
+
+    screen.blit(loadgamebackground, loadgamebackgroundrect)
+
+    MENUtext = get_font(int(15 * enlargmentfactor[0])).render("Save Name:", True, (255, 255, 255))
+    MENUrect = MENUtext.get_rect(center=(size[0] / 3, size[1] / 2 - 30 * enlargmentfactor[0]))
+
+    name_input_box = Interactables.TextInputBox(size[0] / 2, size[1] / 2 - 10 * enlargmentfactor[1],
+                                                200 * enlargmentfactor[0], get_font(int(20 * enlargmentfactor[0])),
+                                                (255, 255, 255), highlightcolor=(147, 147, 147))
+
+    MENUrect.x = name_input_box.rect.x
+
+    BackButton = Button(image=None,
+                        pos=(size[0] / 3 + 50 * enlargmentfactor[0], size[1] / 2 - 50 * enlargmentfactor[0]),
+                        text_input="Back", font=get_font(int(15 * enlargmentfactor[0])), base_color="#d7fcd4",
+                        hovering_color="White")
+
+    ContinueButton = Button(image=None, pos=(
+    size[0] / 2 + loadgamebackground.get_size()[0] / 4, size[1] / 2 + 50 * enlargmentfactor[0]),
+                            text_input="Continue", font=get_font(int(15 * enlargmentfactor[0])), base_color="#d7fcd4",
+                            hovering_color="White")
+
+    while loadgameopen:
+
+        mousepositon = pygame.mouse.get_pos()
+
+        screen.blit(background, (0, 0))
+        screen.blit(loadgamebackground, loadgamebackgroundrect)
+        screen.blit(MENUtext, MENUrect)
+        screen.blit(name_input_box.image, name_input_box.rect)
+
+        file = open('./Saves/Save.Dungeon')
+
+        jsondata = json.load(file)
+        file.close()
+
+        try:
+            if jsondata['Saves'][f'{name_input_box.text}']:
+                saveexists = True
+                ContinueButton.changeColor(mousepositon)
+        except:
+            saveexists = False
+            ContinueButton.ForceColor((208,0,0))
+
+        ContinueButton.update(screen)
+
+
+        for i in [BackButton]:
+            i.changeColor(mousepositon)
+            i.update(screen)
+
+        event_list = pygame.event.get()
+        for event in event_list:
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    if BackButton.checkForInput(mousepositon):
+                        loadgameopen = False
+                    if ContinueButton.checkForInput(mousepositon) and saveexists:
+                        pygame.mixer.music.fadeout(750)
+                        file = open('./Saves/Save.Dungeon', 'r')
+
+                        jsondata = json.load(file)
+                        file.close()
+
+                        name = name_input_box.text
+
+                        savedata = jsondata['Saves'][f'{name}']
+
+                        player = Classes.Player(name, savedata['Seed'], coins=savedata['Player Data']['coins'], levelnum=savedata['Level'],
+                                                score=savedata['Player Data']['score'],
+                                                health=savedata['Player Data']['health'],
+                                                items=[Classes.itemreference[i]() for i in
+                                                       savedata['Player Data']['items']])
+
+                        file = open('./Saves/Save.Dungeon', 'w')
+
+
+                        jsondata['MostRecentSave'] = name
+
+                        json.dump(jsondata, file, indent=4)
+
+                        for i in range(1, 250):
+                            background.fill((0, 0, 0))
+                            background.set_alpha(i / 5)
+                            screen.blit(background, (0, 0))
+                            pygame.display.update()
+                        Main.game(False, player, 1, savedata['Seed'])
+
+        name_input_box.update(event_list)
+
+        pygame.display.update()
+
+# play function controls text, display, and button clicking for play screen
+def play(display,size):
+    background = pygame.image.load("assets/Hotpot-2.png")
+    background = pygame.transform.scale(background, size)
+
+    coverbox = pygame.transform.scale(pygame.image.load('./Art/Menu/CoverBox.png'), (size[0]/2,size[1]))
+
+
+    enlargmentfactor = (size[0]/DEFAULT_IMAGE_SIZE[1], size[1]/DEFAULT_IMAGE_SIZE[1])
+
+    MENUtext = get_font(100).render("THE LOST DUNGEON", True, "#b68f40")
+    MENUrect = MENUtext.get_rect(center=(size[0] / 2, 100))
+
+    f = open('./Saves/Save.Dungeon')
+
+    savedata = json.load(f)
+
+    if savedata['MostRecentSave'] != "None":
+        ContinueGame = Button(image=None, pos=(size[0]/4, size[1]-275*enlargmentfactor[0]),
+                              text_input="Continue", font=get_font(int(35*enlargmentfactor[0])), base_color="#d7fcd4", hovering_color="White")
+    else:
+        ContinueGame = Button(image=None, pos=(size[0]/4, size[1]-275*enlargmentfactor[0]),
+                              text_input="Continue", font=get_font(int(35*enlargmentfactor[0])), base_color=(73,73,73), hovering_color="White", disabled=True)
+
+    # creating the buttons
+    NewGameButton = Button(image=None, pos=(size[0]/4, size[1]-200*enlargmentfactor[0]),
+                     text_input="New Game", font=get_font(int(35*enlargmentfactor[0])), base_color="#d7fcd4", hovering_color="White")
+    LoadGame = Button(image=None, pos=(size[0]/4, size[1]-125*enlargmentfactor[0]),
+                      text_input="Load Game", font=get_font(int(35*enlargmentfactor[0])), base_color="#d7fcd4", hovering_color="White")
+    BackButton = Button(image=None, pos=(size[0]/4, size[1]-50*enlargmentfactor[0]),
+                        text_input="Back", font=get_font(int(35*enlargmentfactor[0])), base_color="#d7fcd4", hovering_color="White")
+
+    f.close()
+    display.blit(background, (0,0))
+    display.blit(coverbox, (0,0))
+    display.blit(MENUtext,MENUrect)
+
+
+    playmenuopen = True
+
+    while playmenuopen:
+        playmouseposition = pygame.mouse.get_pos()
+
+        for i in [NewGameButton, LoadGame, BackButton, ContinueGame]:
+            i.changeColor(playmouseposition)
+            i.update(display)
 
         # Running through all the events to see if a button was clicked then run a function if something was clicked
         for event in pygame.event.get():
@@ -30,8 +275,37 @@ def play(display):
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if playback.checkForInput(playmouseposition):
-                    main_menu(display,display.get_size())
+                if event.button == 1:
+                    if BackButton.checkForInput(playmouseposition):
+                        playmenuopen = False
+
+                    if NewGameButton.checkForInput(playmouseposition):
+                        NewGame(display,display.get_size(), display.copy(), enlargmentfactor)
+                        display.blit(background, (0, 0))
+                        display.blit(coverbox, (0, 0))
+                        display.blit(MENUtext, MENUrect)
+                    if ContinueGame.checkForInput(playmouseposition):
+                        pygame.mixer.music.fadeout(750)
+                        file = open('./Saves/Save.Dungeon', 'r')
+
+                        jsondata = json.load(file)
+
+                        savedata = jsondata['Saves'][f'{jsondata["MostRecentSave"]}']
+
+                        player = Classes.Player(jsondata["MostRecentSave"], savedata['Seed'], coins= savedata['Player Data']['coins'], levelnum= savedata['Level'], score= savedata['Player Data']['score'], health= savedata['Player Data']['health'], items=[Classes.itemreference[i]() for i in savedata['Player Data']['items']])
+                        for i in range(1,100):
+                            background.fill((0,0,0))
+                            background.set_alpha(i)
+                            display.blit(background, (0,0))
+                            pygame.display.update()
+                        Main.game(False, player, player.levelnum, savedata['Seed'])
+                    if LoadGame.checkForInput(playmouseposition):
+                        loadGame(display,display.get_size(), display.copy(), enlargmentfactor)
+                        display.blit(background, (0, 0))
+                        display.blit(coverbox, (0, 0))
+                        display.blit(MENUtext, MENUrect)
+
+
 
         pygame.display.update()
 
@@ -132,12 +406,17 @@ def tutorial_menu(display):
 def main_menu(display,size):
     background = pygame.image.load("assets/Hotpot-2.png")
     background = pygame.transform.scale(background, size)
+
+    pygame.mixer.music.stop()
+    pygame.mixer.music.load('./Music/Menu.mp3')
+    pygame.mixer.music.play(-1)
+    pygame.mixer.music.set_volume(1)
     while True:
         display.blit(background, (0, 0))
 
         menumouseposition = pygame.mouse.get_pos()
         # sizing the buttons
-        MENUtext = get_font(100).render("MAIN MENU", True, "#b68f40")
+        MENUtext = get_font(100).render("THE LOST DUNGEON", True, "#b68f40")
         MENUrect = MENUtext.get_rect(center=(size[0]/2, 100))
         Playbuttonimage = pygame.image.load("assets/Play Rect.png")
         Playbuttonimage = pygame.transform.scale(Playbuttonimage, (math.ceil(Playbuttonimage.get_size()[0] * (size[0]//DEFAULT_IMAGE_SIZE[0]) *1.5),math.ceil(Playbuttonimage.get_size()[1]*(size[1]//DEFAULT_IMAGE_SIZE[1])*1.5)))
@@ -177,7 +456,7 @@ def main_menu(display,size):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     if PLAYbutton.checkForInput(menumouseposition):
-                        play(display)
+                        play(display, display.get_size())
                     if OPTIONbutton.checkForInput(menumouseposition):
                         options(display)
                     if QUITbutton.checkForInput(menumouseposition):
@@ -188,16 +467,32 @@ def main_menu(display,size):
 
 #Splash function displays the splash screen and calls main menu function
 def splash(display, size):
+
+    opening = pygame.mixer.Sound('./Music/Company_Intro.mp3')
+    opening.play()
+
+    enlagmentfactorx = size[0] / DEFAULT_IMAGE_SIZE[0]
+    enlagmentfactory = size[1]/DEFAULT_IMAGE_SIZE[1]
+
     background = pygame.image.load("assets/Hotpot-2.png")
-    splashtext = get_font(45).render("DARKEST DUNGEON.", True, "White")
-    names = get_font(25).render("By Maddox Ganesh, and Kieran Cline", True, "White")
-    text = get_font(45).render("Click to continue", True, "White")
-    DEFAULT_IMAGE_SIZE = (1280, 720)
-    background1 = pygame.transform.scale(background, DEFAULT_IMAGE_SIZE)
-    screen.blit(background1, (0, 0))
-    screen.blit(splashtext, (320, 140))
-    screen.blit(names, (240, 240))
-    screen.blit(text, (260, 500))
+    splashtext = get_font(int(50 * enlagmentfactorx)).render("THE LOST DUNGEON.", True, "White")
+    splashrect = splashtext.get_rect(center = (size[0]/2, size[1]/4))
+
+    names = get_font(int(25*enlagmentfactorx)).render("By Maddox Ganesh, and Kieran Cline", True, "White")
+    namesrect= names.get_rect(center = (size[0]/2, size[1]/4+25+splashrect.height))
+
+    text = get_font(int(50*enlagmentfactorx)).render("Click to continue", True, "White")
+    textrect = text.get_rect(center = (size[0]/2, size[1]/6*5))
+
+    background1 = pygame.transform.scale(background, size)
+
+    company = pygame.image.load('Art/Menu/Company Intro.png').convert_alpha()
+
+    companyrect = company.get_rect(center = (size[0]/2,size[1]/2))
+
+    display.blit(company, companyrect)
+
+    pygame.time.set_timer(pygame.event.Event(100), 2500, loops= 1)
 
     # Running through all the events to see if a button was clicked then run a function if something was clicked
     while True:
@@ -206,7 +501,15 @@ def splash(display, size):
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
+                opening.stop()
                 main_menu(display, size)
+
+            if event.type == 100:
+                print(event.type)
+                display.blit(background1, (0, 0))
+                display.blit(splashtext, splashrect)
+                display.blit(names, namesrect)
+                display.blit(text, textrect)
         pygame.display.update()
 
 #Game function to monitor the timing and prevent screen from quitting immediately.

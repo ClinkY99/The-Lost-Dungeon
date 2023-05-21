@@ -1,17 +1,17 @@
 import pygame, sys
 from mainmenu import main_menu
-from button import Button
+from Interactables import Button
 pygame.init()
 
 num=90 #the coin function
-screen = pygame.display.set_mode((1280, 720))
+#screen = pygame.display.set_mode((1280, 720))
 pygame.display.set_caption("Inventory Menu")
 background = pygame.Surface((1280, 720))
 light_gray = ((84,86,86))
 background.fill(light_gray)
 background.set_alpha(75)
 
-screen = pygame.display.set_mode((1280, 720))
+#screen = pygame.display.set_mode((1280, 720))
 
 def settings(display):
     settings = True
@@ -88,4 +88,4 @@ def Pause_menu(display):
                     paused = False
 
         pygame.display.update()
-Pause_menu(screen)
+#Pause_menu(screen)

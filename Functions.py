@@ -1,5 +1,5 @@
 import math
-import random
+import random, json
 
 import pygame.draw
 
@@ -110,3 +110,33 @@ def OverlapLine(distance, angle, startpoint, damgables, size):
 
 def get_font(size): # Returns Press-Start-2P in the desired size
     return pygame.font.Font("assets/font.ttf", size)
+
+def SaveGame(player):
+    file = open('./Saves/Save.Dungeon')
+    jsonfile = json.load(file)
+    file.close()
+
+    file = open('./Saves/Save.Dungeon', 'w')
+
+    Savedata = jsonfile['Saves'][player.name]
+
+    Savedata['Level'] = player.levelnum
+    Savedata['Player Data']['coins'] = player.money
+    Savedata['Player Data']['health'] = player.health
+    Savedata['Player Data']['score'] = player.XP
+    Savedata['Player Data']['items'] = [i.name for i in player.items]
+
+    jsonfile['Saves'][player.name] = Savedata
+
+    json.dump(jsonfile, file, indent= 4)
+
+def FTB(screen, length):
+    black = pygame.Surface(screen.get_size())
+    black.fill((0,0,0))
+
+    pygame.mixer.music.fadeout(length*3)
+
+    for i in range(1, length):
+        black.set_alpha(i/(250/length))
+        screen.blit(black, (0,0))
+        pygame.display.update()

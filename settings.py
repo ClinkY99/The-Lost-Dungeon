@@ -1,5 +1,5 @@
 import pygame, sys
-from button import Button
+from Interactables import Button
 pygame.init()
 
 def get_font(size): # Returns Press-Start-2P in the desired size
@@ -8,7 +8,7 @@ def get_font(size): # Returns Press-Start-2P in the desired size
 screen = pygame.display.set_mode((1280, 720))
 
 # settings functions with all teh setting controls
-def settings(display):
+def settings(display,size):
     settings = True
 
     while settings:
@@ -17,14 +17,14 @@ def settings(display):
         display.fill("blue")
 
         PLAYtext = get_font(45).render("This is the Settings screen.", True, "White")
-        PLAYrect = PLAYtext.get_rect(center=(640, 260))
-        display.blit(PLAYtext,PLAYrect )
+        PLAYrect = PLAYtext.get_rect(center=(size[0]/2, 100))
+        display.blit(PLAYtext,PLAYrect)
 
         playback = Button(image=None, pos=(640, 460),
                             text_input="BACK", font=get_font(75), base_color="White", hovering_color="turquoise")
 
         playback.changeColor(playmouseposition)
-        playback.update(screen)
+        playback.update(display)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

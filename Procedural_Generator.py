@@ -301,7 +301,10 @@ def spawnchest(generator, loot, diffuculty):
     chests = []
     rooms = list(generator.rooms)
     for i in range(0, random.randrange(1,loot)):
-        chests.append((Classes.Treasure(poispawnloc(generator,(6,6),rooms), random.randrange(0,8), math.ceil(diffuculty/4), 4)))
+        try:
+            chests.append((Classes.Treasure(poispawnloc(generator,(6,6),rooms), random.randrange(0,8), math.ceil(diffuculty/4), 4)))
+        except:
+            pass
     return chests
 def spawnJars(generator, maxjarchance):
     jars = pygame.sprite.Group()
@@ -356,6 +359,7 @@ class ProceduralGenerator():
 
     #generate function
     def Generate(self, numrooms, roomMin, roomMax, maxdistance, branching, corridormaxlen, splittingchance, MaxCorridorsPerRoom, DeadEnds, Diffuculty, ObjectivesNum, loot, maxjars):
+
         print('Generating Rooms')
         for i in range(numrooms):
             self.rooms.append(SpawnRoom(roomMin, roomMax, maxdistance, self.size, self))

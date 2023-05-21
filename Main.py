@@ -9,6 +9,9 @@ from Procedural_Generator import ProceduralGenerator
 from Classes import Player
 import Classes
 from Shop import Shop
+from PauseMenu import Pause_menu
+
+import deathscreen, Endscreen
 
 DEFAULT_IMAGE_SIZE = (1280, 720)
 
@@ -107,7 +110,7 @@ class HUD(pygame.sprite.Sprite):
         self.healthIndicator = self.healthbarlevel.copy()
         self.healthIndicator.fill((211, 28, 28))
 
-        self.healthbarlevel.blit(self.healthIndicator, (0,0))
+        self.healthbarlevel.blit(self.healthIndicator, (((player.health - 100) / 5) * 8 * self.ScreenLength / DEFAULT_IMAGE_SIZE[0], 0))
 
         self.healthbar.fill((0, 0, 0))
         self.healthbar.blit(self.healthbarlevel, self.healthbarlevelrect)
@@ -243,7 +246,7 @@ class HUD(pygame.sprite.Sprite):
 
 
 class game(object):
-    def __init__(self):
+    def __init__(self, tutorial, player, levelnum, seed):
         # sets up pygame and mixer
 
 
@@ -255,12 +258,19 @@ class game(object):
         mixer.music.play(-1)
         mixer.music.set_volume(0.10)
 
+        print(player)
+
+        self.player = player
+        self.player.currentlevel = self
+
+        self.tutorial = tutorial
+        self.levelnum = levelnum
 
         self.ScreenLength= 1920
         self.ScreenWidth = 1080
 
         #sets up the generator class with tile size
-        self.generator = ProceduralGenerator(int(self.ScreenLength / 10), int(self.ScreenWidth / 10), 75)
+        self.generator = ProceduralGenerator(2*levelnum+75,2*levelnum+75, seed+levelnum)
 
         # Set up the drawing window
         self.screen = pygame.display.set_mode([self.ScreenLength, self.ScreenWidth], pygame.FULLSCREEN)
@@ -309,7 +319,6 @@ class game(object):
         self.camera_Y = None
         self.camera_X = None
         self.running = None
-        self.player = None
         self.obstructions = None
         self.newsize = None
         self.smallchangeblesoverlay = None
@@ -317,6 +326,7 @@ class game(object):
         self.objectivesRemaining = None
         self.interactables = pygame.sprite.Group()
         self.Objectives = pygame.sprite.Group()
+        self.paused = False
 
 
         #init
@@ -325,10 +335,11 @@ class game(object):
         self.Gameloop()
     def Generatelevel(self):
         # generates map
-        self.generator.Generate(5, 10, 30, 5, True, 50, 10, 2, None, 3, 1, 5, 25)
+        self.generator.Generate(math.ceil((1/2)*self.levelnum+3), 8 ,math.ceil((1/6)*self.levelnum+15) , 5, True, 25, 10, math.ceil((1/5) * self.levelnum+2), None, math.ceil(self.levelnum/2), math.ceil(self.levelnum/5), 5, math.ceil(self.levelnum/2)+5)
         self.matrix = self.generator.matrix
         # inits player
-        self.player = Player((self.generator.startloc[0][0], self.generator.startloc[0][1]), self)
+        self.player.rect.x = self.generator.startloc[0][0]
+        self.player.rect.y = self.generator.startloc[0][1]
 
 
         # draws map
@@ -370,11 +381,12 @@ class game(object):
             pass
         while self.running:
             self.eventcheck()
-            self.Movement()
-            self.interactioncheck()
-            self.UpdateHostiles()
-            self.UpdateItems()
-            self.HUD.Update(self.player)
+            if not self.paused:
+                self.Movement()
+                self.interactioncheck()
+                self.UpdateHostiles()
+                self.UpdateItems()
+                self.HUD.Update(self.player)
             self.update()
             self.clock.tick(120)
             print(self.clock.get_fps())
@@ -391,7 +403,7 @@ class game(object):
                     self.cameraSpeed = 30/self.clock.get_fps()*1.5
             elif event.type == pygame.KEYDOWN:
                 # if user presses M open map
-                if event.key == pygame.K_ESCAPE:
+                if event.key == pygame.K_RSHIFT:
                     print('ENEMIES')
                     print(len(self.enemys.sprites()))
                     self.running = False
@@ -400,6 +412,10 @@ class game(object):
                     self.player.Interact(self.interactables, self)
                 elif event.key == pygame.K_LSHIFT:
                     self.cameraSpeed = 30/self.clock.get_fps()*3
+                elif event.key == pygame.K_ESCAPE:
+                    Pause_menu(self.screen, self.screen.get_size(), self.player)
+                elif event.key == pygame.K_y:
+                    self.GameOver()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     self.player.Attack(self.angle, self.damagables, (self.ScreenLength, self.ScreenWidth))
@@ -540,14 +556,12 @@ class game(object):
         # print('complete')
         # pygame.quit()
         # sys.exit(-1)
-        Shop(self.player)
+        Functions.FTB(self.screen, 200)
+        Endscreen.end_screen(self.screen,self.screen.get_size(), (self.ScreenLength/DEFAULT_IMAGE_SIZE[0], self.ScreenWidth/DEFAULT_IMAGE_SIZE[1]), self.player)
+
     def GameOver(self):
         print('Game Over')
-        pygame.quit()
-        sys.exit(-1)
-
-gameinstance = game()
-
+        deathscreen.Death_screen(self.screen,self.screen.get_size(), (self.ScreenLength/DEFAULT_IMAGE_SIZE[0], self.ScreenWidth/DEFAULT_IMAGE_SIZE[1]), self.player)
 
 
 

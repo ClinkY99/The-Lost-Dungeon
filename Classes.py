@@ -192,7 +192,7 @@ class Objective(pygame.sprite.Sprite):
         self.complete = True
         self.Forms = None
         self.player.XP += 5000
-        self.player.level.HUD.UpdateScore(self.player)
+        self.player.currentlevel.HUD.UpdateScore(self.player)
         return True
     def Interact(self, level):
         self.player = level.player
@@ -376,6 +376,8 @@ class Bow(secondaryWeapon):
         self.price = 700
         self.prereq = None
 
+itemreference = {"GUN": basicsword, "Bow": Bow}
+
 class Endpoint(pygame.sprite.Sprite):
     def __init__(self, location, room):
         super(Endpoint, self).__init__()
@@ -408,18 +410,18 @@ class Coin(pygame.sprite.Sprite):
         if self.smallrect.colliderect(player.rect):
             self.kill()
             player.money += self.monataryvalue
-            player.level.HUD.UpdateCoins()
+            player.currentlevel.HUD.UpdateCoins()
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, startloc, level):
+    def __init__(self, name, seed, coins = 0, levelnum = 1, score = 0, items = None, health = 100):
         super(Player, self).__init__()
         self.image = pygame.Surface((20,20))
         self.image.fill((210, 75, 222))
         self.tinyimage = pygame.Surface((5,5))
         self.tinyimage.fill((210,75,222))
         self.rect = self.tinyimage.get_rect()
-        self.rect.x = startloc[0]
-        self.rect.y = startloc[1]
+        self.rect.x = 0 #startloc[0]
+        self.rect.y = 0 #startloc[1]
         self.bigrect = self.image.get_rect()
         self.bigrect.x = self.rect.x *5
         self.bigrect.y = self.rect.y *5
@@ -430,15 +432,20 @@ class Player(pygame.sprite.Sprite):
         self.equippedConsumable = None
         self.equppedSpellbook = None
 
-        self.level = level
-        self.health = 100
+        self.currentlevel = None #level
+        self.health = health
         self.armourlevel = 10
 
-        self.money = 700
-        self.XP = 0
-        self.levelnum = 1
+        self.money = coins
+        self.XP = score
+        self.levelnum = levelnum
+        self.name = name
+        self.seed = seed
 
-        self.items = []
+        if items == None:
+            items = [basicsword()]
+
+        self.items = items
     def Inventory(self):
         pass
     def Interact(self, interactables, level):
@@ -446,14 +453,14 @@ class Player(pygame.sprite.Sprite):
             if self.bigrect.colliderect(i):
                 i.Interact(level)
     def Attack(self, angle, damagables, size):
-        self.primaryWeapon.primaryAttack(angle, self.rect.center, damagables, size, self.level)
+        self.primaryWeapon.primaryAttack(angle, self.rect.center, damagables, size, self.currentlevel)
     def damage(self, amount):
         print('hit')
         print(self.health)
         self.health -= amount
         if self.health <= 0:
-            self.level.GameOver()
-        self.level.HUD.damage(self)
+            self.currentlevel.GameOver()
+        self.currentlevel.HUD.damage(self)
     def Health(self):
         pass
     # def MoveUp(self, moveTime, screensize: tuple):

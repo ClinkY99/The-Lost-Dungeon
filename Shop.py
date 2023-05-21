@@ -1,17 +1,14 @@
 import pygame, sys
 from pygame import mixer
-from button import Button, ImageButton
+
+import Main
+from Interactables import Button, ImageButton
 import Functions, Classes
-from MainMenu import main_menu
+import mainmenu
 
-ScreenLength = 1920
-ScreenWidth = 1080
-
-screen = pygame.display.set_mode((ScreenLength, ScreenWidth))
-screen.fill((255,255,255))
 
 class Shop():
-    def __init__(self, player):
+    def __init__(self, player, screen, size):
         pygame.init()
         mixer.init()
 
@@ -19,8 +16,8 @@ class Shop():
         mixer.music.play(-1)
         mixer.music.set_volume(0.90)
 
-        self.ScreenLength = 1920
-        self.ScreenWidth = 1080
+        self.ScreenLength = size[0]
+        self.ScreenWidth = size[1]
 
         self.screen = screen
 
@@ -87,7 +84,7 @@ class Shop():
 
     def GetItems(self):
         for item in self.items:
-            if item not in self.player.items and (item.prereq in self.player.items or item.prereq == None):
+            if item.name not in [i.name for i in self.player.items] and (item.prereq in self.player.items or item.prereq == None):
 
                 itemdisplay = self.Itemdisplay.copy()
                 itemdisplay.blit(item.image, item.image.get_rect(center=  (self.Itemdisplay.get_size()[0]//2, self.Itemdisplay.get_size()[1]//2-25)))
@@ -146,7 +143,8 @@ class Shop():
         self.walletRect = self.wallet.get_rect(center= (self.ScreenLength-self.wallet.get_size()[0]-20, 200))
 
     def Continue(self):
-        pass
+        Functions.SaveGame(self.player)
+        Main.game(False, self.player, self.player.levelnum, self.player.seed)
 
     def Shop(self):
         self.GetItems()
@@ -156,11 +154,15 @@ class Shop():
             self.screen.blit(self.background, (0,0))
 
             self.BuyablesArea.fill((77,77,77))
-            for itemonsale in self.onsale:
-                self.BuyablesArea.blit(itemonsale[0], itemonsale[1])
 
-            Rect = self.SelectedItem[4].get_rect(center=(self.ScreenLength / 2, (self.ScreenWidth / 8) * 7))
-            self.screen.blit(self.SelectedItem[4], Rect)
+            if self.SelectedItem:
+                for itemonsale in self.onsale:
+                    self.BuyablesArea.blit(itemonsale[0], itemonsale[1])
+
+                Rect = self.SelectedItem[4].get_rect(center=(self.ScreenLength / 2, (self.ScreenWidth / 8) * 7))
+                self.screen.blit(self.SelectedItem[4], Rect)
+            else:
+                self.BuyablesArea.blit(pygame.transform.scale(pygame.image.load('./Art/Shop/Sold Out.png').convert_alpha(), (self.BuyablesArea.get_size())), (0,0))
 
             self.screen.blit(self.BuyablesArea, (0,self.ScreenWidth/4))
             self.screen.blit(self.MENUtext, self.MENUrect)
@@ -169,15 +171,17 @@ class Shop():
             if self.currentindex != 0:
                 self.LeftButton.changeColor(menumouseposition)
                 self.LeftButton.update(self.screen)
-            if self.currentindex != len(self.onsale) -1:
+            if self.currentindex != len(self.onsale) -1 and self.SelectedItem:
                 self.RightButton.changeColor(menumouseposition)
                 self.RightButton.update(self.screen)
-
-            if self.SelectedItem[2].price <= self.player.money and not self.SelectedItem[2].purchased:
-                self.PurchaseButton.changeColor(menumouseposition)
+            if self.SelectedItem:
+                if self.SelectedItem[2].price <= self.player.money and not self.SelectedItem[2].purchased:
+                    self.PurchaseButton.changeColor(menumouseposition)
+                else:
+                    self.PurchaseButton.ForceColor((208,0,0))
             else:
-                self.PurchaseButton.ForceColor((208,0,0))
-            self.PurchaseButton.update(screen)
+                self.PurchaseButton.ForceColor((208, 0, 0))
+            self.PurchaseButton.update(self.screen)
 
 
             for button in [self.ExitToMenuButton, self.ContinueButton]:
@@ -190,10 +194,12 @@ class Shop():
                     sys.exit()
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
-                        if self.PurchaseButton.checkForInput(menumouseposition) and self.SelectedItem[2].price <= self.player.money and not self.SelectedItem[2].purchased:
-                            self.Purchase()
+                        if self.SelectedItem:
+                            if self.PurchaseButton.checkForInput(menumouseposition) and self.SelectedItem[2].price <= self.player.money and not self.SelectedItem[2].purchased:
+                                self.Purchase()
                         if self.ExitToMenuButton.checkForInput(menumouseposition):
-                            main_menu(self.screen, (ScreenLength, ScreenWidth))
+                            Functions.SaveGame(self.player)
+                            mainmenu.main_menu(self.screen, (self.ScreenLength, self.ScreenWidth))
                         if self.ContinueButton.checkForInput(menumouseposition):
                             self.Continue()
                         if self.LeftButton.checkForInput(menumouseposition) and self.currentindex !=0:
@@ -202,4 +208,4 @@ class Shop():
                             self.IncrementItems(1)
             pygame.display.update()
 
-#Shop(Classes.Player((0,0), None))
+#Shop(Classes.Player())
