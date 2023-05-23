@@ -17,18 +17,22 @@ DEFAULT_IMAGE_SIZE = (1280, 720)
 
 class HUD(pygame.sprite.Sprite):
     def __init__(self, ScreenLength, ScreenWidth, player, level):
+        #sets up screen length variables and gets reference to player
         self.ScreenLength = ScreenLength
         self.ScreenWidth = ScreenWidth
 
         self.EnlargmentFactor = self.ScreenLength / DEFAULT_IMAGE_SIZE[0], self.ScreenWidth / DEFAULT_IMAGE_SIZE[1]
         self.player = player
 
+
+        #sets up background image
         self.image = pygame.transform.scale(pygame.image.load('Art/HUD/HUD Background.png').convert_alpha(),
                                           (self.ScreenLength, self.ScreenWidth))
         self.image.set_alpha(200)
 
         self.rect = self.image.get_rect()
 
+        #sets up item HUD
         self.Item = pygame.transform.scale(pygame.image.load('Art/HUD/Items HUD.png').convert_alpha(), (
         self.ScreenLength / DEFAULT_IMAGE_SIZE[0] * 250, self.ScreenWidth / DEFAULT_IMAGE_SIZE[1] * 250))
         self.ItemDisplay = self.Item.copy()
@@ -42,6 +46,8 @@ class HUD(pygame.sprite.Sprite):
         self.HUD = pygame.transform.scale(pygame.image.load('Art/HUD/HUD Background.png').convert_alpha(),
                                           (self.ScreenLength, self.ScreenWidth))
 
+
+        #sets up main weapon display
         self.MainWeaponsDisplay = pygame.Surface(
             (self.ScreenLength / DEFAULT_IMAGE_SIZE[0] * 92, self.ScreenWidth / DEFAULT_IMAGE_SIZE[1] * 92))
         self.MainWeaponsDisplayRect = self.MainWeaponsDisplay.get_rect()
@@ -51,11 +57,14 @@ class HUD(pygame.sprite.Sprite):
         if player.primaryWeapon != None:
             self.MainWeaponImage = pygame.transform.scale(player.primaryWeapon.image, self.MainWeaponsDisplay.get_size())
 
+        #sets up blocking display
         self.BlockingDisplay = self.MainWeaponsDisplay.copy()
         self.BlockingDisplay.fill((70,70,70))
         self.BlockingDisplay.set_alpha(100)
         self.BlockingDisplayRect = self.MainWeaponsDisplayRect.copy()
 
+
+        #sets up Secondary Weapon Display
         self.SecondaryWeaponsDisplay = pygame.Surface(
             (self.ScreenLength / DEFAULT_IMAGE_SIZE[0] * 69, self.ScreenWidth / DEFAULT_IMAGE_SIZE[1] * 69))
         self.SecondaryWeaponsDisplayRect = self.SecondaryWeaponsDisplay.get_rect()
@@ -64,8 +73,9 @@ class HUD(pygame.sprite.Sprite):
         self.SecondaryWeaponsDisplay.set_colorkey((255, 255, 255))
         if player.secondaryWeapon != None:
             self.SecondaryWeaponsImage = pygame.transform.scale(player.secondaryWeapon.image, self.SecondaryWeaponsDisplay.get_size())
-            self.amunitioncount = Functions.get_font(int(10*self.EnlargmentFactor[0])).render(f'{player.secondaryWeapon.ammunitionref.ammunitioncount}', False, (255,255,255))
+            self.amunitioncount = Functions.get_font(int(10*self.EnlargmentFactor[0])).render(f'{player.secondaryWeapon.ammunitionref.ammunitioncount}', False, (254,255,255))
 
+        #sets up consumable display
         self.ConsumablesDisplay = self.SecondaryWeaponsDisplay.copy()
         self.ConsumablesDisplayRect = self.SecondaryWeaponsDisplay.get_rect()
         self.ConsumablesDisplayRect.x = 13 * self.ScreenLength / DEFAULT_IMAGE_SIZE[0]
@@ -78,7 +88,7 @@ class HUD(pygame.sprite.Sprite):
                 f'{int(player.equippedConsumable.ammunitioncount)}', False, (254, 255, 255))
 
 
-
+        #sets up magic display, not used
         self.MagicDisplay = self.SecondaryWeaponsDisplay.copy()
         self.MagicDisplayRect = self.SecondaryWeaponsDisplay.get_rect()
         self.MagicDisplayRect.x = 153 * self.ScreenLength / DEFAULT_IMAGE_SIZE[0]
@@ -95,6 +105,7 @@ class HUD(pygame.sprite.Sprite):
         self.countCU = 0
         self.countSC = 0
 
+        #sets up healthbar
         self.healthbarimage =  pygame.transform.scale(pygame.image.load('Art/HUD/Health bar Temp.png').convert_alpha(), (
         self.ScreenLength / DEFAULT_IMAGE_SIZE[0] * 200, self.ScreenWidth / DEFAULT_IMAGE_SIZE[1] * 40))
         self.healthbar = self.healthbarimage.copy()
@@ -122,6 +133,7 @@ class HUD(pygame.sprite.Sprite):
         self.damaged = -1
         self.health = -1
 
+        #sets up hud information, Coins, Score, Level, And objectives
         self.Coins = Functions.get_font(int(self.EnlargmentFactor[0]*25)).render(f'{player.money}', False, (255,239,0))
         self.Coinsimage = pygame.transform.scale_by(pygame.image.load('./Art/Items/Money_Bag.png').convert_alpha(), self.EnlargmentFactor[0])
 
@@ -135,10 +147,12 @@ class HUD(pygame.sprite.Sprite):
         self.ObjectivesRemainingRect = self.ObjectivesRemaining.get_rect(center=(ScreenLength / 2, 25))
 
     def Update(self,player):
+        #clears screen
         self.image.fill((1,1,1))
 
         self.ItemDisplay.fill((255,255,255))
 
+        #blits items to the item display
         self.ItemDisplay.blit(self.Item, (0,0))
 
         self.MainWeaponsDisplay.fill((255, 255, 255))
@@ -147,6 +161,7 @@ class HUD(pygame.sprite.Sprite):
         self.MagicDisplay.fill((255, 255, 255))
 
 
+        #does animation logic for all items
         if self.countPA > 0:
             self.PrimaryAttack(player)
         elif player.primaryWeapon != None:
@@ -168,7 +183,7 @@ class HUD(pygame.sprite.Sprite):
         elif player.equppedSpellbook != None:
             self.MagicDisplay.blit(self.MagicDisplayImage, (0,0))
 
-
+        #does health bar logic, stops health bar from refreshing unless it is needed
         if self.damaged > 0:
             self.healthbar.fill((0, 0, 0))
             self.healthbarlevel.fill((0, 0, 0))
@@ -207,7 +222,7 @@ class HUD(pygame.sprite.Sprite):
             self.healthbar.blit(self.healthbarimage, (0, 0))
 
 
-
+        #blits everything to screen
         self.ItemDisplay.blit(self.MainWeaponsDisplay, self.MainWeaponsDisplayRect)
         self.ItemDisplay.blit(self.SecondaryWeaponsDisplay, self.SecondaryWeaponsDisplayRect)
         self.ItemDisplay.blit(self.ConsumablesDisplay, self.ConsumablesDisplayRect)
@@ -227,6 +242,7 @@ class HUD(pygame.sprite.Sprite):
 
 
     def PrimaryAttack(self, player):
+        #makes weapon pulse when attack
         weapon = self.MainWeaponImage.copy()
         weapon = pygame.transform.scale_by(weapon, ((-1/2)*((1/4)*self.countPA -1)**2 +1.5))
         rect = weapon.get_rect(center= (self.MainWeaponsDisplay.get_size()[0]/2, self.MainWeaponsDisplay.get_size()[1]/2))
@@ -236,21 +252,27 @@ class HUD(pygame.sprite.Sprite):
             self.countPA = 0
 
     def SecondaryAttack(self,player):
+        #makes cooldown for secondary attack
         self.MainWeaponsDisplay.blit(self.BlockingDisplay,(0, self.BlockingDisplay.get_size()[1]*(self.countSA/player.primaryWeapon.secondaryCooldown)))
         self.countSA+=1
         if self.countSA >= player.primaryWeapon.secondaryCooldown:
             self.countSA = 0
     def damage(self, player):
+        #sets up damaged animation
         self.damaged = 2
     def heal(self):
+        #sets up health animation
         self.health = 7
 
     def UpdateCoins(self):
+        #updates coind
         self.Coins = Functions.get_font(int(self.EnlargmentFactor[0] * 25)).render(f'{self.player.money}', False,
                                                                                    (255,239,0))
     def UpdateScore(self,player):
+        #updates score
         self.Score = Functions.get_font(int(self.EnlargmentFactor[0]*25)).render(f'Score:{player.XP}', False, (255,255,255))
     def UpdateObjectiveCount(self, level):
+        #updates objectives infor
         if level.objectivesRemaining > 0:
             self.ObjectivesRemaining = Functions.get_font(int(self.EnlargmentFactor[0] * 25)).render(
                 f'Objectives Remaining: {level.objectivesRemaining}', True, (0, 166, 60))
@@ -259,11 +281,13 @@ class HUD(pygame.sprite.Sprite):
                 f'Find The Exit', True, (0, 166, 60))
         self.ObjectivesRemainingRect = self.ObjectivesRemaining.get_rect(center=(self.ScreenLength / 2, 25))
     def UpdateSecondaryWeapon(self, player):
+        #updates secondary weapon image
         if player.secondaryWeapon != None:
             self.SecondaryWeaponsImage = pygame.transform.scale(player.secondaryWeapon.image,
                                                                 self.SecondaryWeaponsDisplay.get_size())
-            self.amunitioncount = Functions.get_font(int(10*self.EnlargmentFactor[0])).render(f'{player.secondaryWeapon.ammunitionref.ammunitioncount}', False, (255,255,255))
+            self.amunitioncount = Functions.get_font(int(10*self.EnlargmentFactor[0])).render(f'{player.secondaryWeapon.ammunitionref.ammunitioncount}', False, (254,255,255))
     def UpdateConsumable(self, player):
+        #sets up Consumable image
         if player.equippedConsumable != None:
             self.ConsumablesImage = pygame.transform.scale(player.equippedConsumable.image, self.ConsumablesDisplay.get_size())
             self.ConsumableCount = Functions.get_font(int(10 * self.EnlargmentFactor[0])).render(
@@ -415,12 +439,14 @@ class game(object):
         self.objectivesRemaining = self.generator.Objectivesnum
         self.HUD = HUD(self.ScreenLength, self.ScreenWidth, self.player, self)
     def Gameloop(self):
+        #Ticks the clock to get fps to set up walking speed
         self.clock.tick(120)
         try:
             self.cameraSpeed = 30 / self.clock.get_fps() * 1.5
         except:
             self.cameraSpeed = 1.5
         while self.running:
+            #runs event checks unless the game is paused
             self.eventcheck()
             if not self.paused:
                 self.Movement()
@@ -433,7 +459,9 @@ class game(object):
             #print(self.clock.get_fps())
 
     def eventcheck(self):
+        #gets mouse position
         mouse_x, mouse_y = pygame.mouse.get_pos()
+        #handles keybinds and alt f4ing
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
@@ -499,7 +527,7 @@ class game(object):
     def Movement(self):
         # gets all keys and does movment for the player.
         keys = pygame.key.get_pressed()
-
+        #move left
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             if not self.player.Checkcollisions(self.obstructions):
                 self.camera_X += self.cameraSpeed
@@ -510,6 +538,7 @@ class game(object):
                 self.camera_Y = movement[1]
             # playerLocation = player.MoveLeft(moveTime, (ScreenLength,ScreenWidth))
             # moveTime +=1
+        #move right
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             if not self.player.Checkcollisions(self.obstructions):
                 self.camera_X -= self.cameraSpeed
@@ -521,6 +550,7 @@ class game(object):
 
             # playerLocation = player.MoveRight(moveTime, (ScreenLength, ScreenWidth))
             # moveTime += 1
+        #move up
         if keys[pygame.K_UP] or keys[pygame.K_w]:
             # playerLocation = player.MoveUp(moveTime, (ScreenLength, ScreenWidth))
             # moveTime += 1
@@ -532,7 +562,7 @@ class game(object):
                 self.camera_X = movement[0]
                 self.camera_Y = movement[1]
 
-
+        #move down
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             if not self.player.Checkcollisions(self.obstructions):
                 self.camera_Y -= self.cameraSpeed
@@ -549,6 +579,7 @@ class game(object):
         if self.playerLocation == (self.ScreenLength / 2 - 25, self.ScreenWidth / 2 - 25):
             moveTime = 1
     def interactioncheck(self):
+        #checks for interactions, runs enemys script, updates objectives
         for i in self.generator.enemys.sprites():
             enemys = i.CheckSpawn(self.playerLocation, math.ceil(self.levelnum/2))
             if enemys:
@@ -564,12 +595,14 @@ class game(object):
 
 
     def UpdateHostiles(self):
+        #updates enemies pathfinding
         for i in self.enemys.sprites():
             i.Update(self.playerLocation, self.obstructions, self.player)
         self.enemysOverlay.fill((0,0,0))
         self.enemys.draw(self.enemysOverlay)
         self.enemysOverlay.set_colorkey((0,0,0))
     def UpdateItems(self):
+        #updates dropped items
         for i in self.items.sprites():
             i.Update(self.player)
         self.itemOverlay.fill((0,0,0))
@@ -611,6 +644,7 @@ class game(object):
         pygame.display.flip()
     def UpdateChangables(self):
         print('test')
+        #updates changables screen(jars)
         self.changeblesoverlay.fill((0,0,0))
         self.changeblesoverlay = self.generator.DrawChangebles(self.changeblesoverlay)
         BigChangablesoverlay = pygame.transform.scale(self.changeblesoverlay, self.newsize)
@@ -625,24 +659,30 @@ class game(object):
         # print('complete')
         # pygame.quit()
         # sys.exit(-1)
+        #Ends Game
         if self.Tutorialcount == 4:
             self.Tutorial()
         Functions.FTB(self.screen, 200)
+        #continues to end screen
         Endscreen.end_screen(self.screen,self.screen.get_size(), (self.ScreenLength/DEFAULT_IMAGE_SIZE[0], self.ScreenWidth/DEFAULT_IMAGE_SIZE[1]), self.player)
 
     def GameOver(self):
         print('Game Over')
+        #continues to death screen
         deathscreen.Death_screen(self.screen,self.screen.get_size(), (self.ScreenLength/DEFAULT_IMAGE_SIZE[0], self.ScreenWidth/DEFAULT_IMAGE_SIZE[1]), self.player)
 
     def Tutorial(self):
+        #sets up tutorial
         if self.Tutorialcount == 0:
             for file in os.listdir('./Art/Tutorial'):
                 filename = os.fsdecode(file)
                 self.tutorialimages.append(pygame.transform.scale_by(pygame.image.load((os.path.join('./Art/Tutorial', filename))).convert_alpha(),self.ScreenLength/DEFAULT_IMAGE_SIZE[0]*1.25))
             self.tutorialscreen = self.tutorialimages[self.Tutorialcount]
         elif self.Tutorialcount == 4:
+            #ends tutorial
             self.tutorialscreen = None
         else:
+            #sets up the new tutorial image
             self.tutorialscreen = self.tutorialimages[self.Tutorialcount]
         self.Tutorialcount+=1
 

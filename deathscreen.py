@@ -13,6 +13,8 @@ def get_font(size): # Returns Press-Start-2P in the desired size
 # main menu function controls, the other functions
 def Death_screen(display, displaysize, enlargmentvalue, player):
 
+    #loads leaderboard
+
     file = open('./Saves/Save.Dungeon')
 
     jsonFile = json.load(file)
@@ -41,6 +43,7 @@ def Death_screen(display, displaysize, enlargmentvalue, player):
 
     pygame.mouse.set_visible(True)
 
+    #sets up screens
     paused = True
     # a different background for the darker gray areas of the screen
     background = pygame.Surface(displaysize)
@@ -65,6 +68,7 @@ def Death_screen(display, displaysize, enlargmentvalue, player):
     ScoreboardTile.set_colorkey((0,0,0))
 
     while paused:
+        #runs blits and Scorboard setup
         display.blit(background, (0,0))
         display.blit(background1, (675*enlargmentvalue[0],150*enlargmentvalue[1]))
 
@@ -128,14 +132,14 @@ def Death_screen(display, displaysize, enlargmentvalue, player):
 
 def Credits(display, displaysize):
 
-
+    #fades screen to black
     Functions.FTB(display, 250)
 
     creditsscreen = pygame.transform.scale(pygame.image.load('./Art/Credits.png').convert_alpha(), displaysize)
 
     creditsscreen.set_alpha(0)
 
-
+    #plays credits song
     pygame.mixer.music.load('./Music/Credits.mp3')
     pygame.mixer.music.play()
     pygame.mixer.music.set_endevent(2)
@@ -143,6 +147,7 @@ def Credits(display, displaysize):
     open = True
     i = 0
     while open:
+        #fades on credits song, when screen is clicked or song ends credits closes and main menu opens
         display.fill((0,0,0))
         display.blit(creditsscreen, (0,0))
         creditsscreen.set_alpha(i)

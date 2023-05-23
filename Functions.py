@@ -1,5 +1,5 @@
 import math
-import random, json
+import random, json, sys,os
 
 import pygame.draw
 
@@ -98,17 +98,21 @@ def WallCheck(generator, coord):
 
 
 def OverlapLine(distance, angle, startpoint, damgables, size):
+    #calculates angle and endpoint
     angle = math.radians(angle-135)
     endpoint = (startpoint[0] + (distance * math.cos(angle)), startpoint[1] + (distance * math.sin(angle)))
+    #draws a line and calculates overlaps based on the rect
     line = pygame.draw.line(pygame.Surface(size), (0,255,0), startpoint, endpoint)
     overlaps = []
     for i in damgables.sprites():
         if line.colliderect(i.overlaprect):
+            #if clipline returns values that means it overlaps with the line
             if i.overlaprect.clipline(startpoint, endpoint):
                 overlaps.append(i)
     return overlaps
 
 def sweepattack(range, angle, sweepangle, startpoint, damgables):
+    #calculates angle and rect
     angle = math.radians(angle-135)
     overlaprect = pygame.Rect(0,0,range, range)
     overlaprect.center = startpoint
@@ -117,18 +121,19 @@ def sweepattack(range, angle, sweepangle, startpoint, damgables):
     for i in damgables.sprites():
         wasnegative = False
         if overlaprect.colliderect(i.overlaprect):
+            #calculates entityangle and if it is between the bouunderys it overlaps
             entityangle = math.atan2(i.rect.y - startpoint[1], i.rect.x - startpoint[0])
             if angle - sweepangle <= entityangle <= angle+sweepangle:
                 overlaps.append(i)
 
-    print(overlaps)
+
     return overlaps
 
 def overlapSpot(location, size, range, damagables, startpoint):
+    #calculates distance and
     distance = math.sqrt((location[0] - startpoint[0]) ** 2 + (location[1] - startpoint[1]) ** 2)
-    print(distance)
-    print(startpoint)
-    print(range)
+
+    #caclulates overlaps
     if distance > range:
         return False
     rect = pygame.Rect(location, size)
@@ -145,11 +150,15 @@ def get_font(size): # Returns Press-Start-2P in the desired size
     return pygame.font.Font("assets/font.ttf", size)
 
 def SaveGame(player):
+    #gets the file reference
     file = open('./Saves/Save.Dungeon')
     jsonfile = json.load(file)
     file.close()
 
+    #reopens file in write mode
     file = open('./Saves/Save.Dungeon', 'w')
+
+    #sets the savedata with all relevent information
 
     Savedata = jsonfile['Saves'][player.name]
 
@@ -161,9 +170,11 @@ def SaveGame(player):
 
     jsonfile['Saves'][player.name] = Savedata
 
+    #writes it to the save.dungeon file
     json.dump(jsonfile, file, indent= 4)
 
 def FTB(screen, length):
+    #fades screen to black based off set length
     black = pygame.Surface(screen.get_size())
     black.fill((0,0,0))
 

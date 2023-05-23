@@ -60,7 +60,7 @@ def Pause_menu(display, size, player):
         settingsbutton = Button(image=OPTIONbuttonimage.set_alpha(0), pos=(size[0] / 2, (size[1] / 4) * 2.5),
                               text_input="Settings",
                               font=get_font(math.ceil(size[0] // DEFAULT_IMAGE_SIZE[0] * 50 * 1.5)),
-                              base_color="#d7fcd4", hovering_color="White")
+                              base_color="#d7fcd4", hovering_color="White", disabled= True)
         QUITbutton = Button(image=Quitbuttonimage.set_alpha(0), pos=(size[0] / 2, (size[1] / 4) * 3.5),
                             text_input="Save & Quit", font=get_font(math.ceil(size[0] // DEFAULT_IMAGE_SIZE[0] * 50 * 1.5)),
                             base_color="#d7fcd4", hovering_color="White")

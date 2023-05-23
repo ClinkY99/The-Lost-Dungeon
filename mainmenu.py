@@ -10,6 +10,7 @@ def get_font(size): # Returns Press-Start-2P in the desired size
     return pygame.font.Font("assets/font.ttf", size)
 
 def NewGame(screen,size, background, enlargmentfactor):
+    #sets up base variables
     newgameopen = True
 
     newgamebackground = pygame.Surface((size[0]/3, size[1]/3))
@@ -42,19 +43,22 @@ def NewGame(screen,size, background, enlargmentfactor):
 
 
     while newgameopen:
-
+        #gets mouse position
         mousepositon = pygame.mouse.get_pos()
 
+        #blits stuff to screen
         screen.blit(background, (0, 0))
         screen.blit(newgamebackground, newgamebackgroundrect)
         screen.blit(MENUtext, MENUrect)
         screen.blit(name_input_box.image, name_input_box.rect)
 
+        #updates buttons
         for i in [BackButton, ContinueButton, TutorialButton]:
             i.changeColor(mousepositon)
             i.update(screen)
 
 
+        #gets what buttons are clicked
         event_list = pygame.event.get()
         for event in event_list:
             if event.type == pygame.QUIT:
@@ -64,13 +68,16 @@ def NewGame(screen,size, background, enlargmentfactor):
                 if event.button == 1:
                     TutorialButton.checkForInput(mousepositon)
                     if BackButton.checkForInput(mousepositon):
+                        #if back button is pressed return to play screen
                         newgameopen = False
                     if ContinueButton.checkForInput(mousepositon):
+                        #when continue button is pressed loaad the save file in read format to get json version
                         pygame.mixer.music.fadeout(750)
                         name = ''
                         file = open('./Saves/Save.Dungeon', 'r')
 
                         jsondata = json.load(file)
+                        #if there is no name inputed give it player i where i is unused, otherwise use inputed name
                         if name_input_box.text == '':
                             for i in range(1, 200):
                                 try:
@@ -81,17 +88,21 @@ def NewGame(screen,size, background, enlargmentfactor):
                                     break
                         else:
                             name = name_input_box.text
+                            file.close()
 
+                        #opens file in write mode
                         file = open('./Saves/Save.Dungeon', 'w')
 
+                        #generates seed
                         if not TutorialButton.clicked:
                             seed = random.randrange(sys.maxsize)
                         else:
                             seed = 10
 
+                        #inits player
                         player = Classes.Player(name, seed)
 
-
+                        #sets up default savedata
                         jsonoutput = {
                             "Level" : 1,
                             "Seed" :seed ,
@@ -107,9 +118,11 @@ def NewGame(screen,size, background, enlargmentfactor):
 
                         jsondata['MostRecentSave'] = name
 
+                        #writes savedata to file and closes file
                         json.dump(jsondata, file, indent= 4)
                         file.close()
 
+                        #fades screen to black
                         for i in range(1,250):
                             background.fill((0,0,0))
                             background.set_alpha(i/5)
@@ -119,12 +132,13 @@ def NewGame(screen,size, background, enlargmentfactor):
 
 
 
-
+        #updates input text box
         name_input_box.update(event_list)
 
         pygame.display.update()
 
 def loadGame(screen,size, background, enlargmentfactor ):
+    #inits setup variables
     loadgameopen = True
 
     loadgamebackground = pygame.Surface((size[0] / 3, size[1] / 3))
@@ -154,7 +168,7 @@ def loadGame(screen,size, background, enlargmentfactor ):
                             hovering_color="White")
 
     while loadgameopen:
-
+        #gets mouse positions and reblit everything to screen
         mousepositon = pygame.mouse.get_pos()
 
         screen.blit(background, (0, 0))
@@ -162,11 +176,14 @@ def loadGame(screen,size, background, enlargmentfactor ):
         screen.blit(MENUtext, MENUrect)
         screen.blit(name_input_box.image, name_input_box.rect)
 
+        #opens save file
+
         file = open('./Saves/Save.Dungeon')
 
         jsondata = json.load(file)
         file.close()
 
+        #if the save exists let them continue else force the button red and stop it from going through
         try:
             if jsondata['Saves'][f'{name_input_box.text}']:
                 saveexists = True
@@ -177,11 +194,12 @@ def loadGame(screen,size, background, enlargmentfactor ):
 
         ContinueButton.update(screen)
 
-
+        #update buttons
         for i in [BackButton]:
             i.changeColor(mousepositon)
             i.update(screen)
 
+        #loop through all events
         event_list = pygame.event.get()
         for event in event_list:
             if event.type == pygame.QUIT:
@@ -190,7 +208,9 @@ def loadGame(screen,size, background, enlargmentfactor ):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     if BackButton.checkForInput(mousepositon):
+                        #if back button is pressed close menu
                         loadgameopen = False
+                    #if save exists and continue button is pressed load save and start level
                     if ContinueButton.checkForInput(mousepositon) and saveexists:
                         pygame.mixer.music.fadeout(750)
                         file = open('./Saves/Save.Dungeon', 'r')
@@ -221,6 +241,8 @@ def loadGame(screen,size, background, enlargmentfactor ):
 
                         json.dump(jsondata, file, indent=4)
 
+
+                        #FTB
                         for i in range(1, 250):
                             background.fill((0, 0, 0))
                             background.set_alpha(i / 5)
@@ -234,6 +256,7 @@ def loadGame(screen,size, background, enlargmentfactor ):
 
 # play function controls text, display, and button clicking for play screen
 def play(display,size):
+    #sets up initiall variables
     background = pygame.image.load("assets/Hotpot-2.png")
     background = pygame.transform.scale(background, size)
 
@@ -273,8 +296,10 @@ def play(display,size):
     playmenuopen = True
 
     while playmenuopen:
+        #gets mouse position
         playmouseposition = pygame.mouse.get_pos()
 
+        #Update buttons
         for i in [NewGameButton, LoadGame, BackButton, ContinueGame]:
             i.changeColor(playmouseposition)
             i.update(display)
@@ -290,11 +315,13 @@ def play(display,size):
                         playmenuopen = False
 
                     if NewGameButton.checkForInput(playmouseposition):
+                        #if new game button was pressed run new game functuon
                         NewGame(display,display.get_size(), display.copy(), enlargmentfactor)
                         display.blit(background, (0, 0))
                         display.blit(coverbox, (0, 0))
                         display.blit(MENUtext, MENUrect)
                     if ContinueGame.checkForInput(playmouseposition):
+                        #if continue button was clicked load save and start level
                         pygame.mixer.music.fadeout(750)
                         file = open('./Saves/Save.Dungeon', 'r')
 
@@ -319,6 +346,7 @@ def play(display,size):
                             pygame.display.update()
                         Main.game(False, player, player.levelnum, savedata['Seed'],display, display.get_size())
                     if LoadGame.checkForInput(playmouseposition):
+                        #if load game button pressed run load game function
                         loadGame(display,display.get_size(), display.copy(), enlargmentfactor)
                         display.blit(background, (0, 0))
                         display.blit(coverbox, (0, 0))
@@ -328,7 +356,7 @@ def play(display,size):
 
         pygame.display.update()
 
-# options function controls text, display, and button clicking for options screen
+# options function controls text, display, and button clicking for options screen, UNUSED
 def options(display):
     while True:
         optionsmouseposition = pygame.mouse.get_pos()
@@ -372,6 +400,7 @@ def options(display):
         pygame.display.update()
 
 # level menu function controls text, display, and button clicking for level menu screen
+#UNUSED
 def level_menu(display):
     while True:
         levelmouseposition = pygame.mouse.get_pos()
@@ -423,6 +452,7 @@ def tutorial_menu(display):
 
 # main menu function controls text, display, and button clicking for main menu screen and the other functions
 def main_menu(display,size):
+    #load init variables
     background = pygame.image.load("assets/Hotpot-2.png")
     background = pygame.transform.scale(background, size)
 
@@ -431,6 +461,7 @@ def main_menu(display,size):
     pygame.mixer.music.play(-1)
     pygame.mixer.music.set_volume(1)
     while True:
+        #do initial blits
         display.blit(background, (0, 0))
 
         menumouseposition = pygame.mouse.get_pos()
@@ -456,7 +487,7 @@ def main_menu(display,size):
         PLAYbutton = Button(image=Playbuttonimage, pos=(size[0]/2, (size[1]/4)*1.5),
                             text_input="PLAY", font=get_font(math.ceil(size[0]//DEFAULT_IMAGE_SIZE[0]*75*1.5)), base_color="#d7fcd4", hovering_color="White")
         OPTIONbutton = Button(image=OPTIONbuttonimage, pos=(size[0]/2, (size[1]/4)*2.5),
-                            text_input="OPTIONS", font=get_font(math.ceil(size[0]//DEFAULT_IMAGE_SIZE[0]*75*1.5)), base_color="#d7fcd4", hovering_color="White")
+                            text_input="OPTIONS", font=get_font(math.ceil(size[0]//DEFAULT_IMAGE_SIZE[0]*75*1.5)), base_color="#d7fcd4", hovering_color="White", disabled= True)
         QUITbutton = Button(image=Quitbuttonimage, pos=(size[0]/2, (size[1]/4)*3.5),
                             text_input="QUIT", font=get_font(math.ceil(size[0]//DEFAULT_IMAGE_SIZE[0]*75*1.5)), base_color="#d7fcd4", hovering_color="White")
 
@@ -487,6 +518,7 @@ def main_menu(display,size):
 #Splash function displays the splash screen and calls main menu function
 def splash(display, size):
 
+    #do initial setup
     opening = pygame.mixer.Sound('./Music/Company_Intro.mp3')
     opening.play()
 

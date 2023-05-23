@@ -30,7 +30,7 @@ class Shop(object):
         self.shopopen = True
         pygame.mouse.set_visible(True)
 
-        self.items = [Classes.gun(), Classes.Bow(), Classes.Crossbow(), Classes.FireSword(), Classes.LightSword()]
+        self.items = [Classes.gun(), Classes.Bow(), Classes.Crossbow(), Classes.FireSword(), Classes.LightSword(), Classes.LeatherArmour(), Classes.PlateArmour(), Classes.FrostWelmArmour()]
 
         self.onsale = []
 
@@ -117,7 +117,7 @@ class Shop(object):
                 itemdisplay.blit(item.image, item.image.get_rect(center=  (self.Itemdisplay.get_size()[0]//2, self.Itemdisplay.get_size()[1]//2-25)))
                 Price = Functions.get_font(20).render(f'{item.price}', True, (255,255,255))
                 itemdisplay.blit(Price, (itemdisplay.get_size()[0]-Price.get_size()[0]-50, itemdisplay.get_size()[1]-Price.get_size()[1]-10))
-                Title = Functions.get_font(45).render(f'{item.name}', True, (255,255,255))
+                Title = Functions.get_font(30).render(f'{item.name}', True, (255,255,255))
                 itemdisplay.blit(Title, Title.get_rect(center= (itemdisplay.get_size()[0]/2, 25)))
                 descriptionDisplay = self.Description.copy()
                 description = item.description.split('\n')

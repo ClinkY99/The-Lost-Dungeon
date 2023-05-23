@@ -2,6 +2,8 @@ import pygame, sys
 from Interactables import Button
 pygame.init()
 
+
+#UNUSED ALL OF THIS
 def get_font(size): # Returns Press-Start-2P in the desired size
     return pygame.font.Font("assets/font.ttf", size)
 
