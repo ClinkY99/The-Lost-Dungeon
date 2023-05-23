@@ -127,13 +127,22 @@ def Death_screen(display, displaysize, enlargmentvalue, player):
         pygame.display.update()
 
 def Credits(display, displaysize):
+
+
     Functions.FTB(display, 250)
 
     creditsscreen = pygame.transform.scale(pygame.image.load('./Art/Credits.png').convert_alpha(), displaysize)
 
     creditsscreen.set_alpha(0)
 
-    for i in range(1, 1000):
+
+    pygame.mixer.music.load('./Music/Credits.mp3')
+    pygame.mixer.music.play()
+    pygame.mixer.music.set_endevent(2)
+
+    open = True
+    i = 0
+    while open:
         display.fill((0,0,0))
         display.blit(creditsscreen, (0,0))
         creditsscreen.set_alpha(i)
@@ -144,6 +153,9 @@ def Credits(display, displaysize):
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.KEYDOWN:
                 mainmenu.main_menu(display, displaysize)
+            elif event.type == 2:
+                open = False
+        i+=1
 
         pygame.display.update()
     mainmenu.main_menu(display, displaysize)

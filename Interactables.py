@@ -45,7 +45,7 @@ class Button():
         self.text = self.font.render(self.text_input, True, color)
 
 class ImageButton():
-    def __init__(self, image, pos, Hoverimage, stayclicked = False):
+    def __init__(self, image, pos, Hoverimage, stayclicked = False, Sound = './SFX/button.mp3'):
         self.image = image
         self.x_pos = pos[0]
         self.y_pos = pos[1]
@@ -54,6 +54,7 @@ class ImageButton():
         self.rect = self.image.get_rect(center=(self.x_pos, self.y_pos))
         self.stayclicked = stayclicked
         self.clicked = False
+        self.Sound = pygame.mixer.Sound(Sound)
 
     # updating the screen so we can keep up with what us currently displayed on the screen
     def update(self, screen):
@@ -65,6 +66,7 @@ class ImageButton():
         if not self.stayclicked:
             if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top,
                                                                                               self.rect.bottom):
+                self.Sound.play()
                 return True
             return False
         else:
@@ -72,11 +74,15 @@ class ImageButton():
                                                                                               self.rect.bottom) and self.clicked:
                 self.image = self.regularimage
                 self.clicked = False
+                self.Sound.play()
+                return 0
             elif position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top,
                                                                                               self.rect.bottom):
                 self.image = self.Hoverimage
                 self.clicked = True
-
+                self.Sound.play()
+                return 1
+            return None
     # The function used to change the color if you are hovering above it, and it base coloring if you are not.
     def changeColor(self, position):
         if not self.stayclicked:

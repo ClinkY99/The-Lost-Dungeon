@@ -249,7 +249,7 @@ def choosestart(generator, size):
     #choses the room it is in
     roomin = generator.rooms[random.randrange(0, len(generator.rooms))]
     #picks a tile to spawn the start in
-    location = (random.randrange(roomin[1][0], roomin[1][0]+roomin[0][0]-2)*10, random.randrange(roomin[1][1], roomin[1][1]+roomin[0][1]-2)*10)
+    location = (random.randrange(roomin[1][0]+1, roomin[1][0]+roomin[0][0]-3)*10, random.randrange(roomin[1][1]+1, roomin[1][1]+roomin[0][1]-3)*10)
     return location, roomin
 
 def chooseend(generator):
@@ -257,8 +257,8 @@ def chooseend(generator):
     rooms.remove(generator.startRoom)
     roomin = rooms[random.randrange(0, len(rooms))]
     # picks a tile to spawn the start in
-    location = (random.randrange(roomin[1][0], roomin[1][0] + roomin[0][0] - 2) * 10,
-                random.randrange(roomin[1][1], roomin[1][1] + roomin[0][1] - 2) * 10)
+    location = (random.randrange(roomin[1][0]+1, roomin[1][0] + roomin[0][0] - 3) * 10,
+                random.randrange(roomin[1][1]+1, roomin[1][1] + roomin[0][1] - 3) * 10)
     return Classes.Endpoint(location, roomin)
 def enemySpawns(diffuculty, generator):
     #gets a list of all rooms
@@ -276,7 +276,7 @@ def enemySpawns(diffuculty, generator):
         tile = room[2][random.randrange(0, len(room[2]))]
         generator.map[tile[0]][tile[1]].enemys = True
         try:
-            enemys.add(EnemySpawn(random.randrange(1,math.ceil(diffuculty/4)), (tile[0] * 10, tile[1] *10)))
+            enemys.add(EnemySpawn(random.randrange(1+math.ceil(diffuculty/8),math.ceil(diffuculty/4))+2, (tile[0] * 10, tile[1] *10)))
         except:
             enemys.add(EnemySpawn(1, (tile[0] * 10, tile[1] *10)))
     return enemys
@@ -386,10 +386,9 @@ class ProceduralGenerator():
         obstructions = pygame.sprite.Group()
         floortile = pygame.Surface((10, 10))
         corner = pygame.Surface((5, 5))
-        start = pygame.Surface((20, 20))
+
         enemytile = pygame.Surface((10, 10))
         enemytile.fill((210, 150, 75))
-        start.fill((0, 0, 100))
         corner.fill((127, 127, 127))
         floortile.fill((255, 255, 255))
         wall = pygame.Surface((5,10))
@@ -415,8 +414,7 @@ class ProceduralGenerator():
         #loops through all pois and draws them to the map
         obstructions.add(self.jars.sprites())
         #adds start location
-        map.blit(start, self.startloc[0])
-        map.blit(self.endpoint.image, self.endpoint.drawingrect)
+
         return map, obstructions
 
     def DrawChangebles(self, map):

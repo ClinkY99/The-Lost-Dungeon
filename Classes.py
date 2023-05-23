@@ -14,6 +14,8 @@ DEFAULT_IMAGE_SIZE = (1280, 720)
 class Enemy(pygame.sprite.Sprite):
     def __init__(self,health, speed, attackdamage, location, moneydroprange):
         super(Enemy, self).__init__()
+        print("health")
+        print(health)
         self.speed=speed
         self.health=health
         self.attackdamage=attackdamage
@@ -28,9 +30,7 @@ class Enemy(pygame.sprite.Sprite):
         self.overlaprect = self.smallimage.get_rect()
         self.overlaprect.x = location[0]
         self.overlaprect.y = location[1]
-        self.weapon = basicsword()
-        self.weapon = 0
-        self.weapon = basicsword()
+        self.weapon = gun()
         self.moneydroprange = moneydroprange
         self.points = 100
     def moveToPlayer(self, playerlocation, obstructions):
@@ -115,24 +115,23 @@ class Enemy(pygame.sprite.Sprite):
     def Attack(self, player, playerlocation):
         distance = math.sqrt((playerlocation[0]-(self.smallLocation[0]))**2 + (playerlocation[1]-(self.smallLocation[1]))**2)
         if distance <= self.weapon.range:
-            if random.randrange(1,50) == 1:
+            if random.randrange(1,25) == 1:
                 if random.randrange(1,20) >= player.armourlevel:
                     player.damage(self.weapon.damage)
     def damage(self, damage, level):
         self.health -= damage
         if self.health < 0:
             self.kill()
-        level.items.add(Coin(self.Location, random.randrange(self.moneydroprange[0], self.moneydroprange[1])))
-        level.player.XP += self.points
-        level.HUD.UpdateScore(level.player)
+            level.items.add(Coin(self.Location, random.randrange(self.moneydroprange[0], self.moneydroprange[1])))
+            level.player.XP += self.points
+            level.HUD.UpdateScore(level.player)
 
 
 
 class basicenemy(Enemy):
-    def __init__(self, location):
-        super(basicenemy, self).__init__(1,1.5,1, location, [100,200])
-        self.weapon=basicsword()
-        self.armour=1
+    def __init__(self, location, diffuculty):
+        super(basicenemy, self).__init__(random.randrange(1*math.ceil((diffuculty**2/10)),5*math.ceil((diffuculty**2/2))),2,1, location, [75//math.ceil(diffuculty*2/10), 175//math.ceil(diffuculty*2/10)])
+        self.weapon=EnemyWeapon(math.ceil(diffuculty**2/25)*3)
 class Tile():
     def __init__(self):
         self.Active = False
@@ -144,17 +143,29 @@ class EnemySpawn(pygame.sprite.Sprite):
         super(EnemySpawn, self).__init__()
         self.NumberEnemys= NumberEnemys
         self.Location = Location
-    def Spawn(self):
+        self.cooldown = 5000
+        self.activetimes = 0
+        self.count = -1
+    def Spawn(self, diffuculty):
         enemys = pygame.sprite.Group()
         for i in range(self.NumberEnemys):
-            enemys.add(basicenemy((random.randrange(self.Location[0]-10, self.Location[0]+20),random.randrange(self.Location[1]-10, self.Location[1]+20))))
-        self.kill()
+            enemys.add(basicenemy((random.randrange(self.Location[0]-10, self.Location[0]+20),random.randrange(self.Location[1]-10, self.Location[1]+20)), diffuculty))
         return enemys
-    def CheckSpawn(self, playerlocation):
-        distance = math.sqrt((playerlocation[0]-self.Location[0])**2 + (playerlocation[1]-self.Location[1])**2)
-        if distance < 100:
-            enemys = self.Spawn()
-            return enemys
+    def CheckSpawn(self, playerlocation, diffuculty):
+        if self.activetimes > 3:
+            self.kill()
+        if self.count != -1:
+            if self.count > self.cooldown:
+                self.count = -1
+            else:
+                self.count +=1
+        else:
+            distance = math.sqrt((playerlocation[0]-self.Location[0])**2 + (playerlocation[1]-self.Location[1])**2)
+            if distance < 100:
+                self.count = 0
+                self.activetimes += 1
+                enemys = self.Spawn(diffuculty)
+                return enemys
 class StartLoc():
     def __init__(self, Location):
         self.Location = Location
@@ -320,7 +331,7 @@ class wall(pygame.sprite.Sprite):
         self.rect.y = y
 
 class item(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, prioritycount):
         super(item, self).__init__()
         #image max size = 250, 250 relative
         self.description = ''
@@ -328,65 +339,222 @@ class item(pygame.sprite.Sprite):
         self.name = ''
         self.prereq = None
         self.purchased = False
+        self.prioritycount = prioritycount
+        self.ammunitioncount = None
+    def Buy(self, player):
+        pass
 
 class primaryWeapon(item):
-    def __init__(self, range, damage):
-        super(primaryWeapon, self).__init__()
+    def __init__(self, range, damage, secondaryrange, secondaryangle, secondarydamage, prioritycount):
+        super(primaryWeapon, self).__init__(prioritycount)
         self.range = range
         self.damage = damage
         self.secondaryCooldown = 0
+        self.secondaryrange = secondaryrange
+        self.secondaryangle = secondaryangle
+        self.secondarydamage = secondarydamage
+
     def primaryAttack(self, angle, startpoint, damagables,size, level):
         hit = Functions.OverlapLine(self.range, angle, startpoint, damagables,size)
         for i in hit:
             i.damage(self.damage, level)
-    def secondaryAttack(self):
-        pass
-
-class secondaryWeapon(item):
-    def __init__(self, range, damage):
-        super(secondaryWeapon, self).__init__()
-        self.range = range
-        self.damage = damage
-    def attack(self, angle, startpoint, damagables,size, level):
-        hit = Functions.OverlapLine(self.range, angle, startpoint, damagables,size)
+    def secondaryAttack(self, angle, startpoint, damagables, level):
+        hit = Functions.sweepattack(self.secondaryrange, angle, self.secondaryangle, startpoint, damagables)
         for i in hit:
             i.damage(self.damage, level)
 
-class basicsword(primaryWeapon):
+class secondaryWeapon(item):
+    def __init__(self, range, damage, prioritycount):
+        super(secondaryWeapon, self).__init__(prioritycount)
+        self.range = range
+        self.damage = damage
+        self.Active = False
+        self.ammunitioncount = 10
+    def attack(self, angle, location, startpoint, damagables,size, level):
+        hit = Functions.OverlapLine(self.range, angle, startpoint, damagables,size)
+        for i in hit:
+            i.damage(self.damage, level)
+        self.Activate()
+        self.ammunitionref.ammunitioncount -= 1
+        level.HUD.UpdateSecondaryWeapon(level.player)
+    def Activate(self):
+        if self.ammunitionref.ammunitioncount != 0:
+            if self.Active:
+                self.image = self.regularimage
+                self.Active = False
+            else:
+                self.image = self.ActiveImage
+                self.Active = True
+            return True
+        else:
+            return False
+    def Buy(self, player, playernoexist = False):
+        self.ammunitionref = ammunition()
+        self.ammunitionref = self.ammunitionref.Buy(player, playernoexist)
+class consumable(item):
+    def __init__(self, prioritycount):
+        super(consumable, self).__init__(prioritycount)
+        self.ammunitioncount = 1
+        self.Maxamount = 100000
+
+class HealthPotion(consumable):
     def __init__(self):
-        super(basicsword, self).__init__(50,10)
-        #self.image = pygame.surface.Surface((250, 250))
-        self.image = pygame.transform.scale(pygame.image.load('./Art/Items/Coin.png').convert_alpha(), ((ScreenLength / DEFAULT_IMAGE_SIZE[0] * 250, ScreenWidth / DEFAULT_IMAGE_SIZE[1] * 92)))
-        #self.image.fill((130,24,235))
-        self.rect = self.image.get_rect()
-        self.description = 'This is a basic "sword"... \n it acts as a gun....\n and the enemies have the same weapon :)'
-        self.name = 'GUN'
+        super(HealthPotion, self).__init__(10)
+        self.healthhealed = 30
+        self.cooldown = 100
+        self.image = pygame.transform.scale(pygame.image.load('./Art/Items/Health Potion.png').convert_alpha(), (250,250))
+        self.description = 'This Potion is the color of blood \n a label says\n drink me to regain 30 health'
+        self.name = 'Potion'
         self.price = 200
+        self.prereq = None
+        self.Maxamount = 5
+    def drink(self, player):
+        if self.ammunitioncount >0:
+            player.health += self.healthhealed
+            player.currentlevel.HUD.heal()
+            if player.health > 100:
+                player.health =100
+            self.ammunitioncount -= 1
+    def Buy(self, player):
+        if self.name not in [i.name for i in player.items]:
+            player.items.append(self)
+            player.equippedConsumable = self
+        else:
+            player.items[[i.name for i in player.items].index(self.name)].ammunitioncount +=1
+class ammunition(consumable):
+    def __init__(self):
+        super(ammunition, self).__init__(1)
+        self.healthhealed = 30
+        self.cooldown = 100
+        self.image = pygame.surface.Surface((250, 250))
+        self.image.fill((216, 84, 84))
+        self.description = 'These arrows are labled multiuse\n for any ranged weapon you can find \n EVEN A GUN?????'
+        self.name = 'Arrows'
+        self.price = 200
+        self.prereq = Bow
+        self.ammunitioncount = 10
+        self.Maxamount = 25
+    def Buy(self, player, playernoexist = False):
+        if playernoexist:
+            if self.name not in [i.name for i in player]:
+                player.append(self)
+                return self
+            else:
+                return player[[i.name for i in player].index(self.name)]
+        else:
+            if self.name not in [i.name for i in player.items]:
+                player.items.append(self)
+                return self
+            else:
+                player.items[[i.name for i in player.items].index(self.name)].ammunitioncount += 5
+                return player.items[[i.name for i in player.items].index(self.name)]
+
+class EnemyWeapon(primaryWeapon):
+    def __init__(self, damage):
+        super(EnemyWeapon, self).__init__(20, damage, 0, 0, 0, 0)
+        self.image = pygame.surface.Surface((250, 250))
+        # self.image = pygame.transform.scale(pygame.image.load('./Art/Items/Coin.png').convert_alpha(), ((ScreenLength / DEFAULT_IMAGE_SIZE[0] * 250, ScreenWidth / DEFAULT_IMAGE_SIZE[1] * 92)))
+        self.image.fill((130, 24, 235))
+        self.rect = self.image.get_rect()
+        self.description = 'Null'
+        self.name = 'enemyweapon'
+        self.price = -1
+        self.prereq = None
+        self.secondaryCooldown = 0
+
+class gun(primaryWeapon):
+    def __init__(self):
+        super(gun, self).__init__(50,10, 200, 100, 200, 100)
+        self.image = pygame.surface.Surface((250, 250))
+        #self.image = pygame.transform.scale(pygame.image.load('./Art/Items/Coin.png').convert_alpha(), ((ScreenLength / DEFAULT_IMAGE_SIZE[0] * 250, ScreenWidth / DEFAULT_IMAGE_SIZE[1] * 92)))
+        self.image.fill((130,24,235))
+        self.rect = self.image.get_rect()
+        self.description = 'This is a basic "sword"... \n it acts as a gun....\n also it can kill everything :)'
+        self.name = 'GUN'
+        self.price = 50000
         self.prereq =None
+        self.secondaryCooldown = 50
+
+class basicSword(primaryWeapon):
+    def __init__(self):
+        super(basicSword, self).__init__(20,10, 20, 45, 5, 0)
+        self.image = pygame.transform.scale(pygame.image.load('./Art/Items/Basic Sword.png').convert_alpha(), (250,250))
+        self.rect = self.image.get_rect()
+        self.description = 'This is a basic "sword"... \n its not very good...\n why am i writing this it will never be seen :('
+        self.name = 'basic sword'
+        self.price = 0
+        self.prereq = None
+        self.secondaryCooldown = 15
+
+class LightSword(primaryWeapon):
+    def __init__(self):
+        super(LightSword, self).__init__(10,30, 10, 90, 45, 10)
+        self.image = pygame.transform.scale(pygame.image.load('./Art/Items/Light Sword.png').convert_alpha(), (250,250))
+        self.rect = self.image.get_rect()
+        self.description = 'This is a sword made of light from the future \n it is very good... at a very short range\n so unfortunatly not that good'
+        self.name = 'Light Sword'
+        self.price = 5000
+        self.prereq = None
+        self.secondaryCooldown = 100
+
+class FireSword(primaryWeapon):
+    def __init__(self):
+        super(FireSword, self).__init__(35,100, 35, 100, 75, 20)
+        self.image = pygame.surface.Surface((250, 250))
+        # self.image = pygame.transform.scale(pygame.image.load('./Art/Items/Coin.png').convert_alpha(), ((ScreenLength / DEFAULT_IMAGE_SIZE[0] * 250, ScreenWidth / DEFAULT_IMAGE_SIZE[1] * 92)))
+        self.image.fill((15, 220, 235))
+        self.rect = self.image.get_rect()
+        self.description = 'The final form of the SWORD \n it will create massive damage in armys\n it also may light user on fire'
+        self.name = 'Fire Sword'
+        self.price = 20000
+        self.prereq = LightSword
         self.secondaryCooldown = 50
 
 class Bow(secondaryWeapon):
     def __init__(self):
-        super(Bow, self).__init__(50, 10)
-        self.image = pygame.surface.Surface((250, 250))
-        self.image.fill((216, 84, 84))
+        super(Bow, self).__init__(150, 15, 1)
+        self.image = pygame.transform.scale(pygame.image.load('./Art/Items/Bow unstrung.png').convert_alpha(), (250,250))
+        self.ActiveImage = pygame.transform.scale(pygame.image.load('./Art/Items/Bow Strung.png').convert_alpha(), (250,250))
+        self.regularimage = self.image.copy()
         self.rect = self.image.get_rect()
         self.description = 'This bow was created by the gods... \n but in reality it is just a rotting wood stick \n with some string attached :)'
         self.name = 'Bow'
-        self.price = 700
+        self.price = 2000
         self.prereq = None
+        self.size = (10,10)
 
-itemreference = {"GUN": basicsword, "Bow": Bow}
+    def attack(self, angle, location, startpoint, damagables, size,level):
+        hit = Functions.overlapSpot(location, self.size, self.range, damagables, startpoint)
+        print(hit)
+        if hit != False:
+            for i in hit:
+                i.damage(self.damage, level)
+            self.Activate()
+            self.ammunitionref.ammunitioncount-=1
+            level.HUD.UpdateSecondaryWeapon(level.player)
+class Crossbow(secondaryWeapon):
+    def __init__(self):
+        super(Crossbow, self).__init__(100, 30, 2)
+        self.image = pygame.surface.Surface((250, 250))
+        self.image.fill((58, 27, 216))
+        self.ActiveImage = self.image.copy()
+        self.ActiveImage.fill((0, 94, 200))
+        self.regularimage = self.image.copy()
+        self.rect = self.image.get_rect()
+        self.description = 'This is a crossbow.... \n in the past people believed that it was made \n when you combined a cross and a bow\n They were right... what are you thinking'
+        self.name = 'Crossbow'
+        self.price = 13000
+        self.prereq = Bow
+
+
+
+itemreference = {"GUN": gun, "Bow": Bow, 'basic sword': basicSword, 'Potion':HealthPotion, 'Arrows':ammunition, 'Crossbow':Crossbow, 'Light Sword':LightSword, 'Fire Sword':FireSword}
 
 class Endpoint(pygame.sprite.Sprite):
     def __init__(self, location, room):
         super(Endpoint, self).__init__()
-        self.image = pygame.Surface((20,20))
-        self.image.fill((77,208,225))
-        self.rect = pygame.rect.Rect(location[0]*5, location[1]*5, 100,100)
-        self.drawingrect = self.image.get_rect()
-        self.drawingrect.x = location[0]
-        self.drawingrect.y = location[1]
+        self.image = pygame.image.load('./Art/Interactables/Exit_Portal.png').convert_alpha()
+        self.rect = self.image.get_rect(topleft = (location[0]*5, location[1]*5))
         self.room = room
     def Interact(self, level):
         print('ENDPOINT REACHED')
@@ -427,14 +595,16 @@ class Player(pygame.sprite.Sprite):
         self.bigrect.y = self.rect.y *5
         self.speed = 2
         self.obstruction = None
-        self.primaryWeapon = basicsword()
-        self.secondaryWeapon = Bow()
+        self.primaryWeapon = None
+        self.secondaryWeapon = None
         self.equippedConsumable = None
         self.equppedSpellbook = None
 
         self.currentlevel = None #level
         self.health = health
-        self.armourlevel = 10
+        self.armourlevel = 5
+
+        self.AttackWithSecondary = False
 
         self.money = coins
         self.XP = score
@@ -443,7 +613,29 @@ class Player(pygame.sprite.Sprite):
         self.seed = seed
 
         if items == None:
-            items = [basicsword()]
+            items = [basicSword()]
+            self.primaryWeapon = items[0]
+        else:
+            for i in items:
+                if issubclass(type(i), primaryWeapon):
+                    if self.primaryWeapon:
+                        if i.prioritycount > self.primaryWeapon.prioritycount:
+                            self.primaryWeapon = i
+                    else:
+                        self.primaryWeapon = i
+                elif issubclass(type(i), secondaryWeapon):
+                    if self.secondaryWeapon:
+                        if i.prioritycount > self.secondaryWeapon.prioritycount:
+                            self.secondaryWeapon = i
+                    else:
+                        self.secondaryWeapon = i
+                elif issubclass(type(i), consumable):
+                    if type(i) != ammunition:
+                        if self.equippedConsumable:
+                            if i.prioritycount > self.equippedConsumable.prioritycount:
+                                self.equippedConsumable = i
+                        else:
+                            self.equippedConsumable = i
 
         self.items = items
     def Inventory(self):
@@ -452,8 +644,15 @@ class Player(pygame.sprite.Sprite):
         for i in interactables.sprites():
             if self.bigrect.colliderect(i):
                 i.Interact(level)
-    def Attack(self, angle, damagables, size):
-        self.primaryWeapon.primaryAttack(angle, self.rect.center, damagables, size, self.currentlevel)
+    def Attack(self, angle, location, damagables, size):
+        if self.AttackWithSecondary:
+            print(location)
+            self.secondaryWeapon.attack(angle, location, self.rect.center, damagables, size, self.currentlevel)
+            self.AttackWithSecondary = False
+        else:
+            self.primaryWeapon.primaryAttack(angle, self.rect.center, damagables, size, self.currentlevel)
+    def SecondaryAttack(self, angle, damagables):
+        self.primaryWeapon.secondaryAttack(angle, self.rect.center, damagables, self.currentlevel)
     def damage(self, amount):
         print('hit')
         print(self.health)

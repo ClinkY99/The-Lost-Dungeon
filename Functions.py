@@ -108,6 +108,39 @@ def OverlapLine(distance, angle, startpoint, damgables, size):
                 overlaps.append(i)
     return overlaps
 
+def sweepattack(range, angle, sweepangle, startpoint, damgables):
+    angle = math.radians(angle-135)
+    overlaprect = pygame.Rect(0,0,range, range)
+    overlaprect.center = startpoint
+    overlaps = []
+
+    for i in damgables.sprites():
+        wasnegative = False
+        if overlaprect.colliderect(i.overlaprect):
+            entityangle = math.atan2(i.rect.y - startpoint[1], i.rect.x - startpoint[0])
+            if angle - sweepangle <= entityangle <= angle+sweepangle:
+                overlaps.append(i)
+
+    print(overlaps)
+    return overlaps
+
+def overlapSpot(location, size, range, damagables, startpoint):
+    distance = math.sqrt((location[0] - startpoint[0]) ** 2 + (location[1] - startpoint[1]) ** 2)
+    print(distance)
+    print(startpoint)
+    print(range)
+    if distance > range:
+        return False
+    rect = pygame.Rect(location, size)
+    overlaps = []
+    for i in damagables.sprites():
+        if rect.colliderect(i.overlaprect):
+            overlaps.append(i)
+    return overlaps
+
+
+
+
 def get_font(size): # Returns Press-Start-2P in the desired size
     return pygame.font.Font("assets/font.ttf", size)
 
@@ -124,7 +157,7 @@ def SaveGame(player):
     Savedata['Player Data']['coins'] = player.money
     Savedata['Player Data']['health'] = player.health
     Savedata['Player Data']['score'] = player.XP
-    Savedata['Player Data']['items'] = [i.name for i in player.items]
+    Savedata['Player Data']['items'] = [[i.name, i.ammunitioncount] for i in player.items]
 
     jsonfile['Saves'][player.name] = Savedata
 

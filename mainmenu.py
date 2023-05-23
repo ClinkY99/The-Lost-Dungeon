@@ -83,7 +83,11 @@ def NewGame(screen,size, background, enlargmentfactor):
                             name = name_input_box.text
 
                         file = open('./Saves/Save.Dungeon', 'w')
-                        seed = random.randrange(sys.maxsize)
+
+                        if not TutorialButton.clicked:
+                            seed = random.randrange(sys.maxsize)
+                        else:
+                            seed = 10
 
                         player = Classes.Player(name, seed)
 
@@ -95,7 +99,7 @@ def NewGame(screen,size, background, enlargmentfactor):
                                 "coins": 0,
                                 "health" : 100,
                                 "score" : 0,
-                                "items": [i.name for i in player.items]
+                                "items": [[i.name, i.ammunitioncount] for i in player.items]
                             }
                         }
 
@@ -198,11 +202,17 @@ def loadGame(screen,size, background, enlargmentfactor ):
 
                         savedata = jsondata['Saves'][f'{name}']
 
+                        items = []
+                        for i in savedata['Player Data']['items']:
+                            item = Classes.itemreference[i[0]]()
+                            if issubclass(type(item), Classes.secondaryWeapon):
+                                item.ammunitioncount = i[1]
+                            items.append(item)
+
                         player = Classes.Player(name, savedata['Seed'], coins=savedata['Player Data']['coins'], levelnum=savedata['Level'],
                                                 score=savedata['Player Data']['score'],
                                                 health=savedata['Player Data']['health'],
-                                                items=[Classes.itemreference[i]() for i in
-                                                       savedata['Player Data']['items']])
+                                                items=items)
 
                         file = open('./Saves/Save.Dungeon', 'w')
 
@@ -292,7 +302,16 @@ def play(display,size):
 
                         savedata = jsondata['Saves'][f'{jsondata["MostRecentSave"]}']
 
-                        player = Classes.Player(jsondata["MostRecentSave"], savedata['Seed'], coins= savedata['Player Data']['coins'], levelnum= savedata['Level'], score= savedata['Player Data']['score'], health= savedata['Player Data']['health'], items=[Classes.itemreference[i]() for i in savedata['Player Data']['items']])
+                        items = []
+                        for i in savedata['Player Data']['items']:
+                            item = Classes.itemreference[i[0]]()
+                            if issubclass(type(item), Classes.consumable):
+                                item.ammunitioncount = i[1]
+                            elif issubclass(type(item), Classes.secondaryWeapon):
+                                item.Buy(items, True)
+                            items.append(item)
+
+                        player = Classes.Player(jsondata["MostRecentSave"], savedata['Seed'], coins= savedata['Player Data']['coins'], levelnum= savedata['Level'], score= savedata['Player Data']['score'], health= savedata['Player Data']['health'], items=items)
                         for i in range(1,100):
                             background.fill((0,0,0))
                             background.set_alpha(i)
