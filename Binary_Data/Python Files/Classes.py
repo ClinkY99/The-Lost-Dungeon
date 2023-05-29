@@ -20,12 +20,12 @@ class Enemy(pygame.sprite.Sprite):
         self.attackdamage=attackdamage
         self.Location = location
         self.smallLocation = (location[0]/5, location[1]/5)
-        self.image = pygame.transform.scale_by(self.image, 1/2)
-        self.backupimage = self.image.copy()
+        self.image = pygame.Surface((15,15))
+        self.image.fill((255,0,0))
         self.rect = self.image.get_rect()
         self.rect.x = location[0] * 5
         self.rect.y = location[1] *5
-        self.smallimage = pygame.Surface((self.image.get_size()[0]/5,self.image.get_size()[1]/5))
+        self.smallimage = pygame.Surface((3,3))
         self.overlaprect = self.smallimage.get_rect()
         self.overlaprect.x = location[0]
         self.overlaprect.y = location[1]
@@ -122,10 +122,8 @@ class Enemy(pygame.sprite.Sprite):
                 self.rect.y += self.speed * math.sin(angle)
     def Update(self, playerlocation, obstructions, player):
         #updates image
-        angle = math.atan2((playerlocation[1] - (self.smallLocation[1])), (playerlocation[0] - (self.smallLocation[0])))
         self.moveToPlayer(playerlocation,obstructions)
         self.Attack(player, playerlocation)
-        self.image = pygame.transform.rotate(self.backupimage, 0-math.degrees(angle)-90)
     def Attack(self, player, playerlocation):
         #if enemy is within range of player, it will have a 1 in 25 chance of attacking per frame, and it has 1 in 4 chance of hitting when it attacks. if it hits damage player
         distance = math.sqrt((playerlocation[0]-(self.smallLocation[0]))**2 + (playerlocation[1]-(self.smallLocation[1]))**2)
@@ -147,10 +145,8 @@ class Enemy(pygame.sprite.Sprite):
 class basicenemy(Enemy):
     def __init__(self, location, diffuculty):
         #sets up enemy variables with scaling
-        self.image = pygame.image.load('./Art/Enemies/Basic_Enemy.png').convert_alpha()
-        super(basicenemy, self).__init__(random.randrange(1*math.ceil((diffuculty**2/10)),5*math.ceil((diffuculty**2/2))),2,1, location, [50, 150])
+        super(basicenemy, self).__init__(random.randrange(1*math.ceil((diffuculty**2/10)),5*math.ceil((diffuculty**2/2))),2,1, location, [75//math.ceil(diffuculty*2/10), 175//math.ceil(diffuculty*2/10)])
         self.weapon=EnemyWeapon(math.ceil(diffuculty**2/25)*3)
-
 class Tile():
     def __init__(self):
         #sets up tile info
@@ -350,8 +346,8 @@ class BigJar(pygame.sprite.Sprite):
     def __init__(self, location):
         #unused
         super(BigJar, self).__init__()
-        self.image = pygame.image.load('./Art/Interactables/Jar Temp 2.png').convert_alpha()
-
+        self.image = pygame.Surface((50, 50))
+        self.image.fill((66, 245, 233))
         self.rect = self.image.get_rect()
         self.rect.x = location[0] * 50
         self.rect.y = location[1] * 50
@@ -597,7 +593,7 @@ class FireSword(primaryWeapon):
         # self.image = pygame.transform.scale(pygame.image.load('./Art/Items/Coin.png').convert_alpha(), ((ScreenLength / DEFAULT_IMAGE_SIZE[0] * 250, ScreenWidth / DEFAULT_IMAGE_SIZE[1] * 92)))
         self.image.fill((15, 220, 235))
         self.rect = self.image.get_rect()
-        self.description = 'The final form of the SWORD \n it will cause massive damage to armys\n it also may light user on fire'
+        self.description = 'The final form of the SWORD \n it will create massive damage in armys\n it also may light user on fire'
         self.name = 'Fire Sword'
         self.price = 20000
         self.prereq = LightSword
@@ -631,10 +627,10 @@ class Crossbow(secondaryWeapon):
     def __init__(self):
         #sets up crossbow damage and selling data
         super(Crossbow, self).__init__(100, 30, 2)
-        self.image = pygame.transform.scale(pygame.image.load('./Art/Items/Crossbow Unloaded.png').convert_alpha(),
-                                            (250, 250))
-        self.ActiveImage = pygame.transform.scale(pygame.image.load('./Art/Items/Crossbow Loaded.png').convert_alpha(),
-                                                  (250, 250))
+        self.image = pygame.surface.Surface((250, 250))
+        self.image.fill((58, 27, 216))
+        self.ActiveImage = self.image.copy()
+        self.ActiveImage.fill((0, 94, 200))
         self.regularimage = self.image.copy()
         self.rect = self.image.get_rect()
         self.description = 'This is a crossbow.... \n in the past people believed that it was made \n when you combined a cross and a bow\n They were right... what are you thinking'
@@ -684,11 +680,9 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, name, seed, coins = 0, levelnum = 1, score = 0, items = None, health = 100):
         #sets up all player default variables
         super(Player, self).__init__()
-        self.image = pygame.image.load('./Art/Character/Player Idle.png').convert_alpha()
-        self.imagelist = [self.image.copy(), pygame.image.load('./Art/Character/Player Primary Attack.png').convert_alpha(),
-                          pygame.image.load('./Art/Character/Player Secondary Attack frame 1.png').convert_alpha(),
-                          pygame.image.load('./Art/Character/Player Secondary Attack frame 2.png').convert_alpha()]
-        self.tinyimage = pygame.Surface((self.image.get_size()[0]/5,self.image.get_size()[1]/5))
+        self.image = pygame.Surface((20,20))
+        self.image.fill((210, 75, 222))
+        self.tinyimage = pygame.Surface((5,5))
         self.tinyimage.fill((210,75,222))
         self.rect = self.tinyimage.get_rect()
         self.rect.x = 0 #startloc[0]
@@ -709,9 +703,6 @@ class Player(pygame.sprite.Sprite):
         self.armourlevel = 5
 
         self.AttackWithSecondary = False
-        self.PAcount = 0
-        self.SAcount = 0
-
 
         self.money = coins
         self.XP = score
@@ -762,17 +753,14 @@ class Player(pygame.sprite.Sprite):
                 i.Interact(level)
     def Attack(self, angle, location, damagables, size):
         #calculates attack with secondary or primary and runs the damage function on said weapon
-
         if self.AttackWithSecondary:
             print(location)
             self.secondaryWeapon.attack(angle, location, self.rect.center, damagables, size, self.currentlevel)
             self.AttackWithSecondary = False
         else:
-            self.PAcount = 5
             self.primaryWeapon.primaryAttack(angle, self.rect.center, damagables, size, self.currentlevel)
     def SecondaryAttack(self, angle, damagables):
         #runs secondary attack for the primary weapon
-        self.SAcount = 10
         self.primaryWeapon.secondaryAttack(angle, self.rect.center, damagables, self.currentlevel)
     def damage(self, amount):
         #if armour is equipped reduce damage otherwise just do normal damage
@@ -834,18 +822,6 @@ class Player(pygame.sprite.Sprite):
                 camera_X -= speed
                 playerLocation[0] += speed/5
         return [camera_X,camera_Y]
-    def update(self, angle):
-        if self.SAcount > 7:
-            self.image = pygame.transform.rotate(self.imagelist[2], 0-angle+35)
-            self.SAcount -=1
-        elif self.SAcount > 0:
-            self.image = pygame.transform.rotate(self.imagelist[3], 0 - angle + 35)
-            self.SAcount -=1
-        elif self.PAcount > 0:
-            self.image = pygame.transform.rotate(self.imagelist[1], 0 - angle + 35)
-            self.PAcount -=1
-        else:
-            self.image = pygame.transform.rotate(self.imagelist[0], 0-angle+35)
 
 class Mouse(pygame.sprite.Sprite):
     def __init__(self):

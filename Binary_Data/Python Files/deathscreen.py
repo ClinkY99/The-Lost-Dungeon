@@ -1,5 +1,3 @@
-import random
-
 import pygame, sys, json
 
 import Functions
@@ -144,36 +142,24 @@ def Credits(display, displaysize):
     #plays credits song
     pygame.mixer.music.load('./Music/Credits.mp3')
     pygame.mixer.music.play()
-    endevent = random.randrange(0,100)
-    pygame.mixer.music.set_endevent(endevent)
+    pygame.mixer.music.set_endevent(2)
 
     open = True
     i = 0
     while open:
-        print('credits')
-        print(i)
-        print(open)
-
-
         #fades on credits song, when screen is clicked or song ends credits closes and main menu opens
         display.fill((0,0,0))
         display.blit(creditsscreen, (0,0))
         creditsscreen.set_alpha(i)
 
         for event in pygame.event.get():
-
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.KEYDOWN:
-                print('test2')
+                mainmenu.main_menu(display, displaysize)
+            elif event.type == 2:
                 open = False
-            elif event.type == endevent:
-                print('test')
-                open = False
-                pygame.mixer.music.unload()
-                pygame.mixer.music.set_endevent(0)
-
         i+=1
 
         pygame.display.update()

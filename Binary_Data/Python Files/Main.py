@@ -478,7 +478,11 @@ class game(object):
                         self.cameraSpeed = 1.5
             elif event.type == pygame.KEYDOWN:
                 # if user presses M open map
-                if event.key == pygame.K_f:
+                if event.key == pygame.K_RSHIFT:
+                    print('ENEMIES')
+                    print(len(self.enemys.sprites()))
+                    self.running = False
+                elif event.key == pygame.K_f:
                     print(self.objectivesRemaining)
                     self.player.Interact(self.interactables, self)
                 elif event.key == pygame.K_LSHIFT:
@@ -606,7 +610,8 @@ class game(object):
         self.itemOverlay.set_colorkey((0,0,0))
     def update(self):
         # rotates direction indicator based off angle
-        self.player.update(self.angle)
+        direction_indicator_rotated = pygame.transform.rotate(self.direction_indicator, -self.angle)
+        rect = direction_indicator_rotated.get_rect(center=self.direction_indicator_rect.center)
 
         # Fill the background with white
         self.screen.fill((0, 0, 0))
@@ -619,7 +624,7 @@ class game(object):
         self.screen.blit(self.enemysOverlay, (self.camera_X, self.camera_Y))
         self.screen.blit(self.itemOverlay, (self.camera_X, self.camera_Y))
         self.screen.blit(self.player.image, (self.ScreenLength / 2 - 10, self.ScreenWidth / 2 - 10))
-
+        self.screen.blit(direction_indicator_rotated, rect)
         if self.player.AttackWithSecondary:
             self.mouse.Update(self.player.secondaryWeapon.range, (self.ScreenLength / 2, self.ScreenWidth / 2))
         else:
